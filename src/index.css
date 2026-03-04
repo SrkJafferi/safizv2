@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Temporary hide Bolt badge */
+div[style*="2147483647"] {
+  display: none !important;
+}

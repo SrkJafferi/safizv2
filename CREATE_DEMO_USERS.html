@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Users Creator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #718096;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .output {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .output pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: 'Monaco', 'Courier New', monospace;
+      color: #2d3748;
+    }
+
+    .success {
+      color: #22543d;
+      background: #f0fff4;
+      border-color: #9ae6b4;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .success strong {
+      color: #22543d;
+    }
+
+    .error {
+      color: #742a2a;
+      background: #fff5f5;
+      border-color: #fc8181;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .error strong {
+      color: #742a2a;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #e2e8f0;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Demo Users Creator</h1>
+    <p class="subtitle">Create test users for all roles in your Supabase project</p>
+
+    <button class="button" onclick="createDemoUsers()" id="createBtn">
+      Create Demo Users
+    </button>
+
+    <div id="message"></div>
+    <div id="output" class="output" style="display: none;"></div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://yruasfmjenjsioqztobo.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlydWFzZm1qZW5qc2lvcXp0b2JvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMTE4MTEsImV4cCI6MjA4NzY4NzgxMX0.wvz_lqqA2bSR3IUM9BaixwfbHJRWvidMGvV1sSV6WDM';
+
+    async function createDemoUsers() {
+      const btn = document.getElementById('createBtn');
+      const messageDiv = document.getElementById('message');
+      const outputDiv = document.getElementById('output');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> Creating users...';
+      messageDiv.innerHTML = '';
+      outputDiv.style.display = 'none';
+
+      try {
+        const apiUrl = `${SUPABASE_URL}/functions/v1/create_demo_users`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          let html = '<div class="success"><strong>✓ Success!</strong><br>Demo users created successfully. Copy credentials below:</div>';
+
+          if (data.users && Array.isArray(data.users)) {
+            html += '<pre>';
+            data.users.forEach(user => {
+              if (user.success) {
+                html += `Email: ${user.email}\nPassword: ${user.password}\nRole: ${user.role}\n\n`;
+              }
+            });
+            html += '</pre>';
+          }
+
+          messageDiv.innerHTML = html;
+        } else {
+          messageDiv.innerHTML = `<div class="error"><strong>Error:</strong> ${data.error || 'Failed to create users'}</div>`;
+          outputDiv.style.display = 'block';
+          outputDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+      } catch (error) {
+        messageDiv.innerHTML = `<div class="error"><strong>Error:</strong> ${error.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Create Demo Users';
+      }
+    }
+  </script>
+</body>
+</html>
