@@ -22,7 +22,11 @@ export default function CreateJob({ onBack }: CreateJobProps) {
   const [loading, setLoading] = useState(false);
   const [loadingRolls, setLoadingRolls] = useState(true);
   const [rolls, setRolls] = useState<Roll[]>([]);
-  const [toast, setToast] = useState<ToastState>({ show: false, type: 'success', message: '' });
+  const [toast, setToast] = useState<ToastState>({
+    show: false,
+    type: 'success',
+    message: '',
+  });
 
   const [formData, setFormData] = useState({
     client_name: '',
@@ -44,7 +48,9 @@ export default function CreateJob({ onBack }: CreateJobProps) {
     setLoadingRolls(true);
     const result = await getRolls();
     if (result.success && result.data) {
-      const activeRolls = result.data.filter(roll => roll.status === 'Active');
+      const activeRolls = result.data.filter(
+        (roll) => roll.status === 'Active'
+      );
       setRolls(activeRolls);
     }
     setLoadingRolls(false);
@@ -55,7 +61,11 @@ export default function CreateJob({ onBack }: CreateJobProps) {
     setTimeout(() => setToast({ show: false, type, message: '' }), 4000);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     if (errors[name]) {
@@ -70,11 +80,17 @@ export default function CreateJob({ onBack }: CreateJobProps) {
       newErrors.client_name = 'Client name is required';
     }
 
-    if (formData.total_material_cost && parseFloat(formData.total_material_cost) < 0) {
+    if (
+      formData.total_material_cost &&
+      parseFloat(formData.total_material_cost) < 0
+    ) {
       newErrors.total_material_cost = 'Material cost cannot be negative';
     }
 
-    if (formData.total_waste_cost && parseFloat(formData.total_waste_cost) < 0) {
+    if (
+      formData.total_waste_cost &&
+      parseFloat(formData.total_waste_cost) < 0
+    ) {
       newErrors.total_waste_cost = 'Waste cost cannot be negative';
     }
 
@@ -104,8 +120,12 @@ export default function CreateJob({ onBack }: CreateJobProps) {
       client_name: formData.client_name.trim(),
       description: formData.description.trim() || undefined,
       selected_roll_id: formData.selected_roll_id || undefined,
-      total_material_cost: formData.total_material_cost ? parseFloat(formData.total_material_cost) : 0,
-      total_waste_cost: formData.total_waste_cost ? parseFloat(formData.total_waste_cost) : 0,
+      total_material_cost: formData.total_material_cost
+        ? parseFloat(formData.total_material_cost)
+        : 0,
+      total_waste_cost: formData.total_waste_cost
+        ? parseFloat(formData.total_waste_cost)
+        : 0,
       labor_cost: formData.labor_cost ? parseFloat(formData.labor_cost) : 0,
       other_cost: formData.other_cost ? parseFloat(formData.other_cost) : 0,
     });
@@ -113,7 +133,10 @@ export default function CreateJob({ onBack }: CreateJobProps) {
     setLoading(false);
 
     if (result.success) {
-      showToast('success', `Job ${result.data?.job_number} created successfully`);
+      showToast(
+        'success',
+        `Job ${result.data?.job_number} created successfully`
+      );
       setFormData({
         client_name: '',
         description: '',
@@ -129,30 +152,29 @@ export default function CreateJob({ onBack }: CreateJobProps) {
   };
 
   const calculateFinalCost = () => {
-    const material = formData.total_material_cost ? parseFloat(formData.total_material_cost) : 0;
-    const waste = formData.total_waste_cost ? parseFloat(formData.total_waste_cost) : 0;
+    const material = formData.total_material_cost
+      ? parseFloat(formData.total_material_cost)
+      : 0;
+    const waste = formData.total_waste_cost
+      ? parseFloat(formData.total_waste_cost)
+      : 0;
     const labor = formData.labor_cost ? parseFloat(formData.labor_cost) : 0;
     const other = formData.other_cost ? parseFloat(formData.other_cost) : 0;
     return (material + waste + labor + other).toFixed(2);
   };
 
-  if (profile?.role !== 'admin') {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
-          </button>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">Create Job</h2>
-            <p className="text-slate-500 mt-1">Add a new production job</p>
-          </div>
-        </div>
+  const allowedRoles = ['admin', 'manager', 'machineman'];
 
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <p className="text-orange-800 font-medium">Access Restricted</p>
-          <p className="text-orange-700 text-sm mt-1">Only administrators can create jobs.</p>
-        </div>
+  // Wait until profile loads
+  if (!profile) {
+    return null; // or loading spinner
+  }
+
+  if (!allowedRoles.includes(profile.role)) {
+    return (
+      <div className="p-6">
+        <h2 className="text-xl font-semibold">Access Restricted</h2>
+        <p>You do not have permission to create jobs.</p>
       </div>
     );
   }
@@ -160,7 +182,10 @@ export default function CreateJob({ onBack }: CreateJobProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+        <button
+          onClick={onBack}
+          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+        >
           <ArrowLeft className="w-5 h-5 text-slate-600" />
         </button>
         <div className="flex items-center gap-3">
@@ -174,7 +199,10 @@ export default function CreateJob({ onBack }: CreateJobProps) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 p-8 space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-xl border border-slate-200 p-8 space-y-6"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -210,11 +238,14 @@ export default function CreateJob({ onBack }: CreateJobProps) {
               <option value="">No roll assigned</option>
               {rolls.map((roll) => (
                 <option key={roll.id} value={roll.id}>
-                  {roll.roll_number} - {roll.size || 'N/A'} - {roll.type || 'N/A'}
+                  {roll.roll_number} - {roll.size || 'N/A'} -{' '}
+                  {roll.type || 'N/A'}
                 </option>
               ))}
             </select>
-            {loadingRolls && <p className="text-xs text-slate-500 mt-1">Loading rolls...</p>}
+            {loadingRolls && (
+              <p className="text-xs text-slate-500 mt-1">Loading rolls...</p>
+            )}
           </div>
         </div>
 
@@ -234,7 +265,9 @@ export default function CreateJob({ onBack }: CreateJobProps) {
         </div>
 
         <div className="border-t border-slate-200 pt-6">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Cost Breakdown</h3>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">
+            Cost Breakdown
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -249,12 +282,16 @@ export default function CreateJob({ onBack }: CreateJobProps) {
                 step="0.01"
                 min="0"
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all ${
-                  errors.total_material_cost ? 'border-red-500' : 'border-slate-300'
+                  errors.total_material_cost
+                    ? 'border-red-500'
+                    : 'border-slate-300'
                 }`}
                 disabled={loading}
               />
               {errors.total_material_cost && (
-                <p className="text-xs text-red-600 mt-1">{errors.total_material_cost}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.total_material_cost}
+                </p>
               )}
             </div>
 
@@ -271,12 +308,16 @@ export default function CreateJob({ onBack }: CreateJobProps) {
                 step="0.01"
                 min="0"
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all ${
-                  errors.total_waste_cost ? 'border-red-500' : 'border-slate-300'
+                  errors.total_waste_cost
+                    ? 'border-red-500'
+                    : 'border-slate-300'
                 }`}
                 disabled={loading}
               />
               {errors.total_waste_cost && (
-                <p className="text-xs text-red-600 mt-1">{errors.total_waste_cost}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.total_waste_cost}
+                </p>
               )}
             </div>
 
@@ -329,7 +370,9 @@ export default function CreateJob({ onBack }: CreateJobProps) {
         {calculateFinalCost() !== '0.00' && (
           <div className="bg-green-50 rounded-lg p-4 border border-green-200">
             <p className="text-sm text-slate-600">Final Cost</p>
-            <p className="text-2xl font-bold text-green-600 mt-1">{calculateFinalCost()}</p>
+            <p className="text-2xl font-bold text-green-600 mt-1">
+              {calculateFinalCost()}
+            </p>
           </div>
         )}
 
@@ -370,9 +413,11 @@ export default function CreateJob({ onBack }: CreateJobProps) {
       </form>
 
       {toast.show && (
-        <div className={`fixed bottom-6 right-6 rounded-lg shadow-lg p-4 text-white animate-fade-in ${
-          toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-        }`}>
+        <div
+          className={`fixed bottom-6 right-6 rounded-lg shadow-lg p-4 text-white animate-fade-in ${
+            toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+          }`}
+        >
           {toast.message}
         </div>
       )}
