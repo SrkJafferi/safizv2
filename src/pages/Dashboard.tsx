@@ -171,45 +171,7 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
           iconColor="text-amber-600"
         />
       </div>
-
-      <div className="bg-white rounded-xl p-8 border border-slate-200">
-        <h3 className="text-lg font-semibold text-slate-800 mb-6">Jobs by Status</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={statusData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, value }) => `${name}: ${value}`}
-              outerRadius={100}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {statusData.map((entry, index) => {
-                const colors = ['#fbbf24', '#10b981', '#ef4444'];
-                return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-              })}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="bg-white rounded-xl p-8 border border-slate-200">
-        <h3 className="text-lg font-semibold text-slate-800 mb-6">Meter Usage Trend (Last 7 Days)</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={meterUsageData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl p-8 border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
@@ -254,6 +216,44 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
           </div>
         </div>
       </div>
+      <div className="bg-white rounded-xl p-8 border border-slate-200">
+        <h3 className="text-lg font-semibold text-slate-800 mb-6">Meter Usage Trend (Last 7 Days)</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={meterUsageData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip />
+            <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="bg-white rounded-xl p-8 border border-slate-200">
+        <h3 className="text-lg font-semibold text-slate-800 mb-6">Jobs by Status</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={statusData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, value }) => `${name}: ${value}`}
+              outerRadius={100}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {statusData.map((entry, index) => {
+                const colors = ['#fbbf24', '#10b981', '#ef4444'];
+                return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+              })}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      
     </div>
   );
 }
