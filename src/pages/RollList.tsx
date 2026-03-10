@@ -15,6 +15,7 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
   const [rolls, setRolls] = useState<Roll[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadRolls();
@@ -52,6 +53,10 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
 
   const canEditRoll = profile?.role === 'admin' || profile?.role === 'manager';
 
+  const displayedRolls = rolls.filter((item) =>
+    JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (profile?.role !== 'admin') {
     return (
       <div className="space-y-6">
@@ -60,14 +65,18 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
             <Package className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Roll Inventory</h2>
+            <h2 className="text-2xl font-bold text-slate-800">
+              Roll Inventory
+            </h2>
             <p className="text-slate-500 mt-1">View all inventory rolls</p>
           </div>
         </div>
 
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
           <p className="text-orange-800 font-medium">Access Restricted</p>
-          <p className="text-orange-700 text-sm mt-1">Only administrators can view roll inventory.</p>
+          <p className="text-orange-700 text-sm mt-1">
+            Only administrators can view roll inventory.
+          </p>
         </div>
       </div>
     );
@@ -81,7 +90,9 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
             <Package className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Roll Inventory</h2>
+            <h2 className="text-2xl font-bold text-slate-800">
+              Roll Inventory
+            </h2>
             <p className="text-slate-500 mt-1">View all inventory rolls</p>
           </div>
         </div>
@@ -109,11 +120,24 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Package className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">No Rolls Found</h3>
-          <p className="text-slate-500">Start by adding your first roll to the inventory.</p>
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">
+            No Rolls Found
+          </h3>
+          <p className="text-slate-500">
+            Start by adding your first roll to the inventory.
+          </p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="px-6 py-4">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
@@ -153,10 +177,15 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {rolls.map((roll) => (
-                  <tr key={roll.id} className="hover:bg-slate-50 transition-colors">
+                {displayedRolls.map((roll) => (
+                  <tr
+                    key={roll.id}
+                    className="hover:bg-slate-50 transition-colors"
+                  >
                     <td className="px-6 py-4">
-                      <p className="font-semibold text-slate-800">{roll.roll_number}</p>
+                      <p className="font-semibold text-slate-800">
+                        {roll.roll_number}
+                      </p>
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-slate-600">{roll.size || '-'}</p>
@@ -168,24 +197,33 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
                       <p className="text-slate-600">{roll.brand || '-'}</p>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <p className="font-medium text-slate-800">{roll.total_meter.toFixed(2)} m</p>
+                      <p className="font-medium text-slate-800">
+                        {roll.total_meter.toFixed(2)} m
+                      </p>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <p className={`font-medium ${
-                        roll.remaining_meter === 0 ? 'text-red-600' : 'text-green-600'
-                      }`}>
+                      <p
+                        className={`font-medium ${
+                          roll.remaining_meter === 0
+                            ? 'text-red-600'
+                            : 'text-green-600'
+                        }`}
+                      >
                         {roll.remaining_meter.toFixed(2)} m
                       </p>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <p className="font-medium text-slate-800">{roll.cost_per_meter.toFixed(2)}</p>
+                      <p className="font-medium text-slate-800">
+                        {roll.cost_per_meter.toFixed(2)}
+                      </p>
                     </td>
                     <td className="px-6 py-4 text-center">
                       {getStatusBadge(roll.status)}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <p className="text-sm text-slate-600">
-                        {new Date(roll.created_at).toLocaleDateString()} {new Date(roll.created_at).toLocaleTimeString()}
+                        {new Date(roll.created_at).toLocaleDateString()}{' '}
+                        {new Date(roll.created_at).toLocaleTimeString()}
                       </p>
                     </td>
                     {canEditRoll && (
