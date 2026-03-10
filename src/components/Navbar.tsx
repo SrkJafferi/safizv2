@@ -42,12 +42,15 @@ export default function Navbar() {
   useEffect(() => {
     const fetchLatestJob = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = (await supabase
           .from('jobs')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(1)
-          .maybeSingle() as { data: { id: string; job_number: string; created_at: string } | null; error: any };
+          .maybeSingle()) as {
+          data: { id: string; job_number: string; created_at: string } | null;
+          error: any;
+        };
 
         if (error) {
           console.error('Error fetching latest job:', error);
@@ -62,7 +65,7 @@ export default function Navbar() {
 
             const newNotification: Notification = {
               id: data.id,
-              title: data.job_number || "New Job Created",
+              title: data.job_number || 'New Job Created',
               createdAt: data.created_at,
               read: false,
             };
@@ -71,7 +74,7 @@ export default function Navbar() {
 
             setNewJobAlert({
               show: true,
-              title: data.job_number || "New Job Created",
+              title: data.job_number || 'New Job Created',
             });
 
             notificationSound.play().catch(() => {});
@@ -103,9 +106,7 @@ export default function Navbar() {
     setIsOpen((prev) => !prev);
     if (!isOpen) {
       setUnreadCount(0);
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true }))
-      );
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     }
   };
 
@@ -117,19 +118,15 @@ export default function Navbar() {
     <>
       {newJobAlert && (
         <div className="fixed top-5 right-5 bg-green-600 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-pulse">
-          <div className="font-semibold">
-            New Job Created
-          </div>
-          <div className="text-sm">
-            {newJobAlert.title}
-          </div>
+          <div className="font-semibold">New Job Created</div>
+          <div className="text-sm">{newJobAlert.title}</div>
         </div>
       )}
 
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
         <div>
           <h1 className="text-lg font-semibold text-slate-800">Dashboard</h1>
-          <p className="text-xs text-slate-500">Welcome back to your workspace</p>
+          <p className="text-xs text-slate-500">Welcome back</p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -143,9 +140,7 @@ export default function Navbar() {
 
             {isOpen && (
               <div className="absolute right-0 mt-3 w-80 bg-white shadow-xl rounded-xl border z-50 max-h-96 overflow-y-auto">
-                <div className="p-4 font-semibold border-b">
-                  Notifications
-                </div>
+                <div className="p-4 font-semibold border-b">Notifications</div>
 
                 {notifications.length === 0 && (
                   <div className="p-4 text-sm text-gray-500">
@@ -157,20 +152,16 @@ export default function Navbar() {
                   <div
                     key={n.id}
                     onClick={() => {
-                      setNotifications(prev =>
-                        prev.map(item =>
-                          item.id === n.id
-                            ? { ...item, read: true }
-                            : item
+                      setNotifications((prev) =>
+                        prev.map((item) =>
+                          item.id === n.id ? { ...item, read: true } : item
                         )
                       );
 
-                      setUnreadCount(prev =>
-                        prev > 0 ? prev - 1 : 0
-                      );
+                      setUnreadCount((prev) => (prev > 0 ? prev - 1 : 0));
                     }}
                     className={`p-3 border-b text-sm cursor-pointer ${
-                      !n.read ? "bg-blue-50 font-medium" : ""
+                      !n.read ? 'bg-blue-50 font-medium' : ''
                     }`}
                   >
                     <div>{n.title}</div>
