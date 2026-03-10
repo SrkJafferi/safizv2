@@ -292,7 +292,7 @@ export default function EntryList() {
             />
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
@@ -340,7 +340,7 @@ export default function EntryList() {
                         : 'hover:bg-slate-50'
                     }`}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div>
                           <p className="font-semibold text-slate-800">
@@ -357,7 +357,7 @@ export default function EntryList() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       {entry.custom_roll_size ? (
                         <>
                           <p className="text-slate-800">Custom Size</p>
@@ -377,33 +377,33 @@ export default function EntryList() {
                         </>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <p className="text-slate-700">
                         {entry.profiles?.full_name || 'Unknown'}
                       </p>
                     </td>
 
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <p className="font-medium text-slate-800">
                         {entry.meter_used.toFixed(2)} m
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <p className="font-medium text-red-600">
                         {entry.waste_meter.toFixed(2)} m
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <p className="font-medium text-blue-600">
                         {entry.material_cost.toFixed(2)}
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <p className="font-medium text-red-600">
                         {entry.waste_cost.toFixed(2)}
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4 text-center whitespace-nowrap">
                       {profile?.role === 'admin' && !entry.jobs?.is_locked ? (
                         <select
                           value={entry.status}
@@ -447,14 +447,14 @@ export default function EntryList() {
                         getStatusBadge(entry.status)
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <p className="text-sm text-slate-600">
                         {formatDate(entry.created_at)}
                       </p>
                     </td>
                     {profile?.role === 'admin' && (
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center justify-center flex-wrap">
                           {entry.jobs?.is_locked ? (
                             <button
                               disabled
