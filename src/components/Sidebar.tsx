@@ -41,6 +41,8 @@ type PageType =
 
 interface SidebarProps {
   onNavigate?: (page: PageType) => void;
+  sidebarOpen?: boolean;
+  setSidebarOpen?: (v: boolean) => void;
 }
 
 const navItems: NavItem[] = [
@@ -87,7 +89,11 @@ const navItems: NavItem[] = [
   { id: 'settings', icon: Settings, label: 'Settings', action: 'settings' },
 ];
 
-export default function Sidebar({ onNavigate }: SidebarProps) {
+export default function Sidebar({
+  onNavigate,
+  sidebarOpen = false,
+  setSidebarOpen,
+}: SidebarProps) {
   const { profile } = useAuth();
   const role = profile?.role || '';
 
@@ -164,11 +170,22 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     ];
     if (action && validPages.includes(action as PageType)) {
       onNavigate?.(action as PageType);
+      if (
+        setSidebarOpen &&
+        typeof window !== 'undefined' &&
+        window.innerWidth < 1024
+      ) {
+        setSidebarOpen(false);
+      }
     }
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen">
+    <aside
+      className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0 lg:static lg:w-64 lg:shadow-none border-r border-slate-200 flex flex-col z-40`}
+    >
       <div className="p-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
