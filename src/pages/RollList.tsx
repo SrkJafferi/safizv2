@@ -139,7 +139,7 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
             />
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
@@ -182,26 +182,26 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
                     key={roll.id}
                     className="hover:bg-slate-50 transition-colors"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <p className="font-semibold text-slate-800">
                         {roll.roll_number}
                       </p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <p className="text-slate-600">{roll.size || '-'}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <p className="text-slate-600">{roll.type || '-'}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <p className="text-slate-600">{roll.brand || '-'}</p>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <p className="font-medium text-slate-800">
                         {roll.total_meter.toFixed(2)} m
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <p
                         className={`font-medium ${
                           roll.remaining_meter === 0
@@ -212,29 +212,29 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
                         {roll.remaining_meter.toFixed(2)} m
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <p className="font-medium text-slate-800">
                         {roll.cost_per_meter.toFixed(2)}
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4 text-center whitespace-nowrap">
                       {getStatusBadge(roll.status)}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4 text-center whitespace-nowrap">
                       <p className="text-sm text-slate-600">
                         {new Date(roll.created_at).toLocaleDateString()}{' '}
                         {new Date(roll.created_at).toLocaleTimeString()}
                       </p>
                     </td>
                     {canEditRoll && (
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center whitespace-nowrap">
                         <button
                           onClick={() => {
                             if (onNavigateToUpdateRoll) {
                               onNavigateToUpdateRoll(roll.id);
                             }
                           }}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-sm font-medium rounded-lg transition-colors"
+                          className="inline-flex items-center gap-2 flex-wrap px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-sm font-medium rounded-lg transition-colors"
                         >
                           <Edit className="w-4 h-4" />
                           Update
