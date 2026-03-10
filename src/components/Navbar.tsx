@@ -26,7 +26,11 @@ interface Notification {
   read: boolean;
 }
 
-export default function Navbar() {
+interface NavbarProps {
+  setSidebarOpen?: (v: boolean) => void;
+}
+
+export default function Navbar({ setSidebarOpen }: NavbarProps) {
   const { profile, signOut } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -124,9 +128,19 @@ export default function Navbar() {
       )}
 
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
-        <div>
-          <h1 className="text-lg font-semibold text-slate-800">Dashboard</h1>
-          <p className="text-xs text-slate-500">Welcome back</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setSidebarOpen?.(true)}
+            className="lg:hidden p-2 rounded-md hover:bg-slate-100"
+            aria-label="Open menu"
+          >
+            <span className="text-2xl">☰</span>
+          </button>
+
+          <div>
+            <h1 className="text-lg font-semibold text-slate-800">Dashboard</h1>
+            <p className="text-xs text-slate-500">Welcome back</p>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -180,13 +194,6 @@ export default function Navbar() {
                 <p className="text-sm font-medium text-slate-800">
                   {profile.full_name || 'User'}
                 </p>
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full border ${
-                    roleColors[profile.role]
-                  }`}
-                >
-                  {roleLabels[profile.role]}
-                </span>
               </div>
               <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center">
                 <User className="w-5 h-5 text-slate-600" />
