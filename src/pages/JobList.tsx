@@ -24,6 +24,7 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState>({ show: false, type: 'success', message: '' });
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadJobs();
@@ -43,6 +44,10 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
 
     setLoading(false);
   };
+
+  const displayedJobs = jobs.filter((item) =>
+    JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const showToast = (type: 'success' | 'error', message: string) => {
     setToast({ show: true, type, message });
@@ -192,6 +197,15 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="px-6 py-4">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
@@ -225,7 +239,7 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {jobs.map((job) => (
+                {displayedJobs.map((job) => (
                   <tr key={job.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
                       <p className="font-semibold text-slate-800">{job.job_number}</p>
