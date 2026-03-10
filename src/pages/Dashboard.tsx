@@ -1,10 +1,28 @@
 import { useState, useEffect } from 'react';
-import { Package, ClipboardList, Printer, TrendingUp, Plus, Briefcase } from 'lucide-react';
+import {
+  Package,
+  ClipboardList,
+  Printer,
+  TrendingUp,
+  Plus,
+  Briefcase,
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getRolls } from '../services/rollService';
 import { getJobs } from '../services/jobService';
 import { supabase } from '../lib/supabase';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts';
 
 interface StatCardProps {
   icon: typeof Package;
@@ -12,6 +30,7 @@ interface StatCardProps {
   value: string;
   bgColor: string;
   iconColor: string;
+  backgroundColor?: string;
 }
 
 interface DashboardProps {
@@ -19,15 +38,27 @@ interface DashboardProps {
   onNavigateToCreateJob?: () => void;
 }
 
-function StatCard({ icon: Icon, title, value, bgColor, iconColor }: StatCardProps) {
+function StatCard({
+  icon: Icon,
+  title,
+  value,
+  bgColor,
+  iconColor,
+  backgroundColor = '#eff6ff',
+}: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl p-6 border border-slate-200">
+    <div
+      className="bg-white rounded-xl p-6 border border-slate-200"
+      style={{ backgroundColor }}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500">{title}</p>
           <p className="text-2xl font-bold text-slate-800 mt-2">{value}</p>
         </div>
-        <div className={`w-12 h-12 ${bgColor} rounded-lg flex items-center justify-center`}>
+        <div
+          className={`w-12 h-12 ${bgColor} rounded-lg flex items-center justify-center`}
+        >
           <Icon className={`w-6 h-6 ${iconColor}`} />
         </div>
       </div>
@@ -35,14 +66,21 @@ function StatCard({ icon: Icon, title, value, bgColor, iconColor }: StatCardProp
   );
 }
 
-export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }: DashboardProps) {
+export default function Dashboard({
+  onNavigateToAddRoll,
+  onNavigateToCreateJob,
+}: DashboardProps) {
   const { profile } = useAuth();
   const [rollCount, setRollCount] = useState(0);
   const [activeJobsCount, setActiveJobsCount] = useState(0);
   const [approvedEntriesCount, setApprovedEntriesCount] = useState(0);
   const [completedTodayCount, setCompletedTodayCount] = useState(0);
-  const [statusData, setStatusData] = useState<{ name: string; value: number }[]>([]);
-  const [meterUsageData, setMeterUsageData] = useState<{ date: string; total: number }[]>([]);
+  const [statusData, setStatusData] = useState<
+    { name: string; value: number }[]
+  >([]);
+  const [meterUsageData, setMeterUsageData] = useState<
+    { date: string; total: number }[]
+  >([]);
 
   useEffect(() => {
     loadStats();
@@ -56,7 +94,9 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
 
     const jobsResult = await getJobs();
     if (jobsResult.success && jobsResult.data) {
-      const activeJobs = jobsResult.data.filter(job => job.status === 'Open' || job.status === 'In Progress');
+      const activeJobs = jobsResult.data.filter(
+        (job) => job.status === 'Open' || job.status === 'In Progress'
+      );
       setActiveJobsCount(activeJobs.length);
     }
 
@@ -86,9 +126,15 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
       .select('status');
 
     if (entriesData) {
-      const pendingCount = entriesData.filter(entry => entry.status === 'Pending').length;
-      const approvedCount = entriesData.filter(entry => entry.status === 'Approved').length;
-      const rejectedCount = entriesData.filter(entry => entry.status === 'Rejected').length;
+      const pendingCount = entriesData.filter(
+        (entry) => entry.status === 'Pending'
+      ).length;
+      const approvedCount = entriesData.filter(
+        (entry) => entry.status === 'Approved'
+      ).length;
+      const rejectedCount = entriesData.filter(
+        (entry) => entry.status === 'Rejected'
+      ).length;
 
       setStatusData([
         { name: 'Pending', value: pendingCount },
@@ -110,20 +156,22 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
       .eq('status', 'Approved');
 
     const usageByDate: Record<string, number> = {};
-    last7Days.forEach(date => {
+    last7Days.forEach((date) => {
       usageByDate[date] = 0;
     });
 
     if (meterData) {
-      meterData.forEach(entry => {
-        const entryDate = new Date(entry.created_at).toISOString().split('T')[0];
+      meterData.forEach((entry) => {
+        const entryDate = new Date(entry.created_at)
+          .toISOString()
+          .split('T')[0];
         if (usageByDate[entryDate] !== undefined) {
           usageByDate[entryDate] += entry.meter_used || 0;
         }
       });
     }
 
-    const chartData = last7Days.map(date => ({
+    const chartData = last7Days.map((date) => ({
       date,
       total: usageByDate[date],
     }));
@@ -136,8 +184,14 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Overview</h2>
-          <p className="text-slate-500 mt-1">Your production management dashboard</p>
-          {profile && <p className="text-sm text-slate-600 mt-2">Logged in as: {profile.full_name} ({profile.role})</p>}
+          <p className="text-slate-500 mt-1">
+            Your production management dashboard
+          </p>
+          {profile && (
+            <p className="text-sm text-slate-600 mt-2">
+              Logged in as: {profile.full_name} ({profile.role})
+            </p>
+          )}
         </div>
       </div>
 
@@ -148,6 +202,7 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
           value={rollCount.toString()}
           bgColor="bg-blue-50"
           iconColor="text-blue-600"
+          backgroundColor="#eff6ff"
         />
         <StatCard
           icon={ClipboardList}
@@ -155,6 +210,7 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
           value={activeJobsCount.toString()}
           bgColor="bg-green-50"
           iconColor="text-green-600"
+          backgroundColor="#f0fdf4"
         />
         <StatCard
           icon={Printer}
@@ -162,6 +218,7 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
           value={approvedEntriesCount.toString()}
           bgColor="bg-orange-50"
           iconColor="text-orange-600"
+          backgroundColor="#fff7ed"
         />
         <StatCard
           icon={TrendingUp}
@@ -169,9 +226,10 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
           value={completedTodayCount.toString()}
           bgColor="bg-amber-50"
           iconColor="text-amber-600"
+          backgroundColor="#fffbeb"
         />
       </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl p-8 border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
@@ -217,20 +275,29 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
         </div>
       </div>
       <div className="bg-white rounded-xl p-8 border border-slate-200">
-        <h3 className="text-lg font-semibold text-slate-800 mb-6">Meter Usage Trend (Last 7 Days)</h3>
+        <h3 className="text-lg font-semibold text-slate-800 mb-6">
+          Meter Usage Trend (Last 7 Days)
+        </h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={meterUsageData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis />
             <Tooltip />
-            <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={2} />
+            <Line
+              type="monotone"
+              dataKey="total"
+              stroke="#3b82f6"
+              strokeWidth={2}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       <div className="bg-white rounded-xl p-8 border border-slate-200">
-        <h3 className="text-lg font-semibold text-slate-800 mb-6">Jobs by Status</h3>
+        <h3 className="text-lg font-semibold text-slate-800 mb-6">
+          Jobs by Status
+        </h3>
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
@@ -245,15 +312,18 @@ export default function Dashboard({ onNavigateToAddRoll, onNavigateToCreateJob }
             >
               {statusData.map((entry, index) => {
                 const colors = ['#fbbf24', '#10b981', '#ef4444'];
-                return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                return (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={colors[index % colors.length]}
+                  />
+                );
               })}
             </Pie>
             <Tooltip />
           </PieChart>
         </ResponsiveContainer>
       </div>
-
-      
     </div>
   );
 }
