@@ -1,7 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Briefcase, Loader2, Lock, Unlock, Trash2, CreditCard as Edit } from 'lucide-react';
+import {
+  Briefcase,
+  Loader2,
+  Lock,
+  Unlock,
+  Trash2,
+  CreditCard as Edit,
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { getJobs, updateJob, toggleJobLock, deleteJob } from '../services/jobService';
+import {
+  getJobs,
+  updateJob,
+  toggleJobLock,
+  deleteJob,
+} from '../services/jobService';
 import type { Database } from '../lib/database.types';
 
 type Job = Database['public']['Tables']['jobs']['Row'];
@@ -22,9 +34,13 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<ToastState>({ show: false, type: 'success', message: '' });
+  const [toast, setToast] = useState<ToastState>({
+    show: false,
+    type: 'success',
+    message: '',
+  });
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadJobs();
@@ -117,9 +133,11 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
 
   const getStatusBadge = (status: JobStatus) => {
     const badges = {
-      'Open': 'px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200',
-      'In Progress': 'px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200',
-      'Closed': 'px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200',
+      Open: 'px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200',
+      'In Progress':
+        'px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200',
+      Closed:
+        'px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200',
     };
     return <span className={badges[status]}>{status}</span>;
   };
@@ -132,7 +150,9 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
             <Briefcase className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Job Management</h2>
+            <h2 className="text-2xl font-bold text-slate-800">
+              Job Management
+            </h2>
             <p className="text-slate-500 mt-1">View and manage all jobs</p>
           </div>
         </div>
@@ -155,7 +175,9 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
             <Briefcase className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Job Management</h2>
+            <h2 className="text-2xl font-bold text-slate-800">
+              Job Management
+            </h2>
             <p className="text-slate-500 mt-1">View and manage all jobs</p>
           </div>
         </div>
@@ -176,7 +198,9 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
             <Briefcase className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Job Management</h2>
+            <h2 className="text-2xl font-bold text-slate-800">
+              Job Management
+            </h2>
             <p className="text-slate-500 mt-1">View and manage all jobs</p>
           </div>
         </div>
@@ -192,7 +216,9 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Briefcase className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">No Jobs Found</h3>
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">
+            No Jobs Found
+          </h3>
           <p className="text-slate-500">Start by creating your first job.</p>
         </div>
       ) : (
@@ -207,7 +233,7 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
             />
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
@@ -231,7 +257,8 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                     Created At
                   </th>
-                  {(profile?.role === 'admin' || profile?.role === 'manager') && (
+                  {(profile?.role === 'admin' ||
+                    profile?.role === 'manager') && (
                     <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Actions
                     </th>
@@ -240,26 +267,38 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {displayedJobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <p className="font-semibold text-slate-800">{job.job_number}</p>
+                  <tr
+                    key={job.id}
+                    className="hover:bg-slate-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="font-semibold text-slate-800">
+                        {job.job_number}
+                      </p>
                       {job.description && (
-                        <p className="text-xs text-slate-500 mt-1">{job.description}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {job.description}
+                        </p>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <p className="text-slate-800">{job.client_name}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <p className="text-slate-600 text-sm">
                         {job.selected_roll_id ? 'Assigned' : 'Not assigned'}
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4 text-center whitespace-nowrap">
                       {profile?.role === 'admin' && !job.is_locked ? (
                         <select
                           value={job.status}
-                          onChange={(e) => handleStatusChange(job.id, e.target.value as JobStatus)}
+                          onChange={(e) =>
+                            handleStatusChange(
+                              job.id,
+                              e.target.value as JobStatus
+                            )
+                          }
                           disabled={updatingJobId === job.id}
                           className="px-3 py-1 rounded-full text-xs font-semibold border focus:ring-2 focus:ring-blue-500 outline-none"
                         >
@@ -271,10 +310,12 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
                         getStatusBadge(job.status)
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <p className="font-medium text-slate-800">{job.final_cost.toFixed(2)}</p>
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <p className="font-medium text-slate-800">
+                        {job.final_cost.toFixed(2)}
+                      </p>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4 text-center whitespace-nowrap">
                       {job.is_locked ? (
                         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
                           <Lock className="w-3 h-3" />
@@ -287,14 +328,16 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <p className="text-sm text-slate-600">
-                        {new Date(job.created_at).toLocaleDateString()} {new Date(job.created_at).toLocaleTimeString()}
+                        {new Date(job.created_at).toLocaleDateString()}{' '}
+                        {new Date(job.created_at).toLocaleTimeString()}
                       </p>
                     </td>
-                    {(profile?.role === 'admin' || profile?.role === 'manager') && (
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
+                    {(profile?.role === 'admin' ||
+                      profile?.role === 'manager') && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
                           {!job.is_locked && (
                             <button
                               onClick={() => {
@@ -312,10 +355,14 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
                           {profile?.role === 'admin' && (
                             <>
                               <button
-                                onClick={() => handleToggleLock(job.id, job.is_locked)}
+                                onClick={() =>
+                                  handleToggleLock(job.id, job.is_locked)
+                                }
                                 disabled={updatingJobId === job.id}
                                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                                title={job.is_locked ? 'Unlock job' : 'Lock job'}
+                                title={
+                                  job.is_locked ? 'Unlock job' : 'Lock job'
+                                }
                               >
                                 {job.is_locked ? (
                                   <Unlock className="w-4 h-4 text-slate-600" />
@@ -325,7 +372,9 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
                               </button>
                               {!job.is_locked && (
                                 <button
-                                  onClick={() => handleDeleteJob(job.id, job.job_number)}
+                                  onClick={() =>
+                                    handleDeleteJob(job.id, job.job_number)
+                                  }
                                   disabled={updatingJobId === job.id}
                                   className="p-2 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                                   title="Delete job"
@@ -347,9 +396,11 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
       )}
 
       {toast.show && (
-        <div className={`fixed bottom-6 right-6 rounded-lg shadow-lg p-4 text-white animate-fade-in ${
-          toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-        }`}>
+        <div
+          className={`fixed bottom-6 right-6 rounded-lg shadow-lg p-4 text-white animate-fade-in ${
+            toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+          }`}
+        >
           {toast.message}
         </div>
       )}
