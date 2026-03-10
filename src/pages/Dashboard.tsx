@@ -187,11 +187,6 @@ export default function Dashboard({
           <p className="text-slate-500 mt-1">
             Your production management dashboard
           </p>
-          {profile && (
-            <p className="text-sm text-slate-600 mt-2">
-              Logged in as: {profile.full_name} ({profile.role})
-            </p>
-          )}
         </div>
       </div>
 
