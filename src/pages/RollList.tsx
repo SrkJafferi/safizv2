@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Loader2, CreditCard as Edit } from 'lucide-react';
+import { Package, Loader2, CreditCard as Edit, Eye } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { getRolls } from '../services/rollService';
@@ -9,9 +9,13 @@ type Roll = Database['public']['Tables']['rolls']['Row'];
 
 interface RollListProps {
   onNavigateToUpdateRoll?: (rollId: string) => void;
+  onNavigateToRollDetail?: (rollId: string) => void;
 }
 
-export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
+export default function RollList({
+  onNavigateToUpdateRoll,
+  onNavigateToRollDetail,
+}: RollListProps) {
   const { profile } = useAuth();
   const [rolls, setRolls] = useState<Roll[]>([]);
   const [loading, setLoading] = useState(true);
@@ -254,9 +258,16 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
                     className="hover:bg-slate-50 transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-semibold text-slate-800">
+                      <button
+                        onClick={() => {
+                          if (onNavigateToRollDetail) {
+                            onNavigateToRollDetail(roll.id);
+                          }
+                        }}
+                        className="px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
+                      >
                         {roll.roll_number}
-                      </p>
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <p className="text-slate-600">{roll.size || '-'}</p>
@@ -299,17 +310,30 @@ export default function RollList({ onNavigateToUpdateRoll }: RollListProps) {
                     </td>
                     {canEditRoll && (
                       <td className="px-6 py-4 text-center whitespace-nowrap">
-                        <button
-                          onClick={() => {
-                            if (onNavigateToUpdateRoll) {
-                              onNavigateToUpdateRoll(roll.id);
-                            }
-                          }}
-                          className="inline-flex items-center gap-2 flex-wrap px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-sm font-medium rounded-lg transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                          Update
-                        </button>
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
+                          <button
+                            onClick={() => {
+                              if (onNavigateToRollDetail) {
+                                onNavigateToRollDetail(roll.id);
+                              }
+                            }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-600 text-sm font-medium rounded-lg transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Details
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (onNavigateToUpdateRoll) {
+                                onNavigateToUpdateRoll(roll.id);
+                              }
+                            }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-sm font-medium rounded-lg transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Update
+                          </button>
+                        </div>
                       </td>
                     )}
                   </tr>

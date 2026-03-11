@@ -42,6 +42,10 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [activeJobsToday, setActiveJobsToday] = useState(0);
+  const [jobsCompletedToday, setJobsCompletedToday] = useState(0);
+  const [totalCompleteJobs, setTotalCompleteJobs] = useState(0);
+
   useEffect(() => {
     loadJobs();
   }, []);
@@ -60,6 +64,30 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
 
     setLoading(false);
   };
+
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    let activeToday = 0;
+    let completedToday = 0;
+    let totalCompleted = 0;
+
+    jobs.forEach((j) => {
+      const created = j.created_at
+        ? new Date(j.created_at).toISOString().split('T')[0]
+        : '';
+      if (j.status === 'Closed') {
+        totalCompleted += 1;
+        if (created === today) completedToday += 1;
+      }
+      if (j.status === 'Open' || j.status === 'In Progress') {
+        if (created === today) activeToday += 1;
+      }
+    });
+
+    setActiveJobsToday(activeToday);
+    setJobsCompletedToday(completedToday);
+    setTotalCompleteJobs(totalCompleted);
+  }, [jobs]);
 
   const displayedJobs = jobs.filter((item) =>
     JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
@@ -208,6 +236,42 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
         <div className="text-right">
           <p className="text-sm text-slate-500">Total Jobs</p>
           <p className="text-2xl font-bold text-slate-800">{jobs.length}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div
+          className="bg-white rounded-xl p-6 border border-slate-200"
+          style={{ backgroundColor: '#eff6ff' }}
+        >
+          <p className="text-sm font-medium text-slate-500">
+            Active Jobs Today
+          </p>
+          <p className="text-2xl font-bold text-blue-600 mt-2">
+            {activeJobsToday}
+          </p>
+        </div>
+        <div
+          className="bg-white rounded-xl p-6 border border-slate-200"
+          style={{ backgroundColor: '#f0fdf4' }}
+        >
+          <p className="text-sm font-medium text-slate-500">
+            Jobs Completed Today
+          </p>
+          <p className="text-2xl font-bold text-green-600 mt-2">
+            {jobsCompletedToday}
+          </p>
+        </div>
+        <div
+          className="bg-white rounded-xl p-6 border border-slate-200"
+          style={{ backgroundColor: '#ffebed' }}
+        >
+          <p className="text-sm font-medium text-slate-500">
+            Total Complete Jobs
+          </p>
+          <p className="text-2xl font-bold text-red-600 mt-2">
+            {totalCompleteJobs}
+          </p>
         </div>
       </div>
 

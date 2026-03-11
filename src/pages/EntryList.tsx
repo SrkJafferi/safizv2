@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FileText, Loader2, Trash2, Filter } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import {
   getJobEntries,
@@ -28,6 +29,10 @@ export default function EntryList() {
   const [updatingEntryId, setUpdatingEntryId] = useState<string | null>(null);
   const [filterRole, setFilterRole] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+
+  const [totalMaterialUsage, setTotalMaterialUsage] = useState(0);
+  const [totalMeterToday, setTotalMeterToday] = useState(0);
+  const [totalWasteToday, setTotalWasteToday] = useState(0);
 
   useEffect(() => {
     loadEntries();
@@ -159,6 +164,37 @@ export default function EntryList() {
   );
   const totalCost = totalMaterialCost + totalWasteCost;
 
+  useEffect(() => {
+    loadRollStats();
+  }, []);
+
+  const loadRollStats = async () => {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data } = await supabase
+      .from('job_entries')
+      .select('created_at, meter_used, waste_meter, material_cost');
+
+    let materialSum = 0;
+    let meterToday = 0;
+    let wasteToday = 0;
+
+    if (data) {
+      data.forEach((e: any) => {
+        materialSum += e.material_cost || 0;
+        const entryDate = new Date(e.created_at).toISOString().split('T')[0];
+        if (entryDate === today) {
+          meterToday += e.meter_used || 0;
+          wasteToday += e.waste_meter || 0;
+        }
+      });
+    }
+
+    setTotalMaterialUsage(materialSum);
+    setTotalMeterToday(meterToday);
+    setTotalWasteToday(wasteToday);
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -248,22 +284,37 @@ export default function EntryList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
-          <p className="text-sm font-medium text-slate-500">Material Cost</p>
+        <div
+          className="bg-white rounded-xl p-6 border border-slate-200"
+          style={{ backgroundColor: '#eff6ff' }}
+        >
+          <p className="text-sm font-medium text-slate-500">
+            Total Material Usage
+          </p>
           <p className="text-2xl font-bold text-blue-600 mt-2">
-            {totalMaterialCost.toFixed(2)}
+            {totalMaterialUsage.toFixed(2)}
           </p>
         </div>
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
-          <p className="text-sm font-medium text-slate-500">Waste Cost</p>
-          <p className="text-2xl font-bold text-red-600 mt-2">
-            {totalWasteCost.toFixed(2)}
+        <div
+          className="bg-white rounded-xl p-6 border border-slate-200"
+          style={{ backgroundColor: '#f0fdf4' }}
+        >
+          <p className="text-sm font-medium text-slate-500">
+            Total Meter Used Today
           </p>
-        </div>
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
-          <p className="text-sm font-medium text-slate-500">Total Cost</p>
           <p className="text-2xl font-bold text-green-600 mt-2">
-            {totalCost.toFixed(2)}
+            {totalMeterToday.toFixed(2)} m
+          </p>
+        </div>
+        <div
+          className="bg-white rounded-xl p-6 border border-slate-200"
+          style={{ backgroundColor: '#ffebed' }}
+        >
+          <p className="text-sm font-medium text-slate-500">
+            Total Waste Today
+          </p>
+          <p className="text-2xl font-bold text-red-600 mt-2">
+            {totalWasteToday.toFixed(2)} m
           </p>
         </div>
       </div>

@@ -234,3 +234,142 @@ export async function getRolls(): Promise<GetRollsResponse> {
     };
   }
 }
+
+export interface RollConsumptionStats {
+  total_meter: number;
+  total_used: number;
+  total_waste: number;
+  remaining: number;
+}
+
+export interface RollConsumptionStatsResponse {
+  success: boolean;
+  data?: RollConsumptionStats;
+  error?: string;
+}
+
+export interface RollUsageHistoryItem {
+  job_number: string;
+  meter_used: number;
+  waste_meter: number;
+  created_at: string;
+}
+
+export interface RollUsageHistoryResponse {
+  success: boolean;
+  data?: RollUsageHistoryItem[];
+  error?: string;
+}
+
+export async function getRollConsumptionStats(rollId: string): Promise<RollConsumptionStatsResponse> {
+  try {
+    const { data: roll, error: rollError } = await supabase
+      .from('rolls')
+      .select('total_meter')
+      .eq('id', rollId)
+      .maybeSingle();
+
+    if (rollError) {
+      return {
+        success: false,
+        error: rollError.message || 'Failed to fetch roll',
+      };
+    }
+
+    if (!roll) {
+      return {
+        success: false,
+        error: 'Roll not found',
+      };
+    }
+
+    const { data: entries, error: entriesError } = await supabase
+      .from('job_entries')
+      .select('meter_used, waste_meter')
+      .eq('roll_id', rollId);
+
+    if (entriesError) {
+      return {
+        success: false,
+        error: entriesError.message || 'Failed to fetch job entries',
+      };
+    }
+
+    const total_used = (entries || []).reduce(
+      (sum, entry) => sum + (entry.meter_used || 0),
+      0
+    );
+
+    const total_waste = (entries || []).reduce(
+      (sum, entry) => sum + (entry.waste_meter || 0),
+      0
+    );
+
+    const remaining = roll.total_meter - total_used - total_waste;
+
+    const stats: RollConsumptionStats = {
+      total_meter: roll.total_meter,
+      total_used,
+      total_waste,
+      remaining,
+    };
+
+    return {
+      success: true,
+      data: stats,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error occurred';
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
+
+export async function getRollUsageHistory(rollId: string): Promise<RollUsageHistoryResponse> {
+  try {
+    const { data, error } = await supabase
+      .from('job_entries')
+      .select(`
+        meter_used,
+        waste_meter,
+        created_at,
+        jobs(job_number)
+      `)
+      .eq('roll_id', rollId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message || 'Failed to fetch roll usage history',
+      };
+    }
+
+    if (!data || data.length === 0) {
+      return {
+        success: true,
+        data: [],
+      };
+    }
+
+    const usageHistory: RollUsageHistoryItem[] = data.map((entry) => ({
+      job_number: (entry.jobs as { job_number: string } | null)?.job_number || 'N/A',
+      meter_used: entry.meter_used,
+      waste_meter: entry.waste_meter,
+      created_at: entry.created_at,
+    }));
+
+    return {
+      success: true,
+      data: usageHistory,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error occurred';
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}

@@ -9,10 +9,18 @@ interface ToastState {
   message: string;
 }
 
-export default function AddRoll() {
+interface AddRollProps {
+  onBack?: () => void;
+}
+
+export default function AddRoll({ onBack }: AddRollProps) {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<ToastState>({ show: false, type: 'success', message: '' });
+  const [toast, setToast] = useState<ToastState>({
+    show: false,
+    type: 'success',
+    message: '',
+  });
   const [checkingRollNumber, setCheckingRollNumber] = useState(false);
   const [rollNumberExists, setRollNumberExists] = useState(false);
 
@@ -32,7 +40,9 @@ export default function AddRoll() {
     setTimeout(() => setToast({ show: false, type, message: '' }), 4000);
   };
 
-  const handleRollNumberChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRollNumberChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = e.target.value;
     setFormData({ ...formData, roll_number: value });
 
@@ -95,13 +105,18 @@ export default function AddRoll() {
       type: formData.type.trim() || undefined,
       brand: formData.brand.trim() || undefined,
       total_meter: parseFloat(formData.total_meter),
-      purchase_cost: formData.purchase_cost ? parseFloat(formData.purchase_cost) : 0,
+      purchase_cost: formData.purchase_cost
+        ? parseFloat(formData.purchase_cost)
+        : 0,
     });
 
     setLoading(false);
 
     if (result.success) {
-      showToast('success', `Roll ${result.data?.roll_number} created successfully`);
+      showToast(
+        'success',
+        `Roll ${result.data?.roll_number} created successfully`
+      );
       setFormData({
         roll_number: '',
         size: '',
@@ -116,14 +131,20 @@ export default function AddRoll() {
     }
   };
 
-  const costPerMeter = formData.total_meter && formData.purchase_cost
-    ? (parseFloat(formData.purchase_cost) / parseFloat(formData.total_meter)).toFixed(2)
-    : '0.00';
+  const costPerMeter =
+    formData.total_meter && formData.purchase_cost
+      ? (
+          parseFloat(formData.purchase_cost) / parseFloat(formData.total_meter)
+        ).toFixed(2)
+      : '0.00';
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+        <button
+          onClick={onBack}
+          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+        >
           <ArrowLeft className="w-5 h-5 text-slate-600" />
         </button>
         <div>
@@ -135,12 +156,17 @@ export default function AddRoll() {
       {profile?.role !== 'admin' && (
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
           <p className="text-orange-800 font-medium">Access Restricted</p>
-          <p className="text-orange-700 text-sm mt-1">Only administrators can add rolls to inventory.</p>
+          <p className="text-orange-700 text-sm mt-1">
+            Only administrators can add rolls to inventory.
+          </p>
         </div>
       )}
 
       {profile?.role === 'admin' && (
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 p-8 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-xl border border-slate-200 p-8 space-y-6"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Roll Number */}
             <div>
@@ -159,19 +185,27 @@ export default function AddRoll() {
                 disabled={loading || checkingRollNumber}
               />
               {checkingRollNumber && (
-                <p className="text-xs text-slate-500 mt-1">Checking availability...</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Checking availability...
+                </p>
               )}
               {rollNumberExists && (
-                <p className="text-xs text-red-600 mt-1">This roll number already exists</p>
+                <p className="text-xs text-red-600 mt-1">
+                  This roll number already exists
+                </p>
               )}
               {errors.roll_number && (
-                <p className="text-xs text-red-600 mt-1">{errors.roll_number}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.roll_number}
+                </p>
               )}
             </div>
 
             {/* Size */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Size</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Size
+              </label>
               <input
                 type="text"
                 name="size"
@@ -185,7 +219,9 @@ export default function AddRoll() {
 
             {/* Type */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Type
+              </label>
               <input
                 type="text"
                 name="type"
@@ -199,7 +235,9 @@ export default function AddRoll() {
 
             {/* Brand */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Brand</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Brand
+              </label>
               <input
                 type="text"
                 name="brand"
@@ -230,7 +268,9 @@ export default function AddRoll() {
                 disabled={loading}
               />
               {errors.total_meter && (
-                <p className="text-xs text-red-600 mt-1">{errors.total_meter}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.total_meter}
+                </p>
               )}
             </div>
 
@@ -253,7 +293,9 @@ export default function AddRoll() {
                 disabled={loading}
               />
               {errors.purchase_cost && (
-                <p className="text-xs text-red-600 mt-1">{errors.purchase_cost}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.purchase_cost}
+                </p>
               )}
             </div>
           </div>
@@ -261,8 +303,12 @@ export default function AddRoll() {
           {/* Cost Per Meter Display */}
           {formData.total_meter && formData.purchase_cost && (
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <p className="text-sm text-slate-600">Auto-calculated Cost Per Meter</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">{costPerMeter}</p>
+              <p className="text-sm text-slate-600">
+                Auto-calculated Cost Per Meter
+              </p>
+              <p className="text-2xl font-bold text-blue-600 mt-1">
+                {costPerMeter}
+              </p>
             </div>
           )}
 
@@ -306,9 +352,11 @@ export default function AddRoll() {
 
       {/* Toast Notification */}
       {toast.show && (
-        <div className={`fixed bottom-6 right-6 rounded-lg shadow-lg p-4 text-white animate-fade-in ${
-          toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-        }`}>
+        <div
+          className={`fixed bottom-6 right-6 rounded-lg shadow-lg p-4 text-white animate-fade-in ${
+            toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+          }`}
+        >
           {toast.message}
         </div>
       )}

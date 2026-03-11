@@ -7,6 +7,7 @@ type PageType =
   | 'add-roll'
   | 'roll-list'
   | 'update-roll'
+  | 'roll-detail'
   | 'create-job'
   | 'job-list'
   | 'update-job'

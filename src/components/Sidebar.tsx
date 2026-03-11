@@ -30,6 +30,7 @@ type PageType =
   | 'add-roll'
   | 'roll-list'
   | 'update-roll'
+  | 'roll-detail'
   | 'create-job'
   | 'job-list'
   | 'update-job'
@@ -159,6 +160,7 @@ export default function Sidebar({
       'add-roll',
       'roll-list',
       'update-roll',
+      'roll-detail',
       'create-job',
       'job-list',
       'update-job',
