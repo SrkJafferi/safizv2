@@ -172,14 +172,26 @@ export default function EntryList() {
 
       const rows = displayedEntries.map((e) => ({
         Job: e.jobs?.job_number ?? '',
-        Roll: e.custom_roll_size ? `Custom: ${e.custom_roll_size}` : e.rolls?.roll_number ?? '',
+        Roll: e.custom_roll_size
+          ? `Custom: ${e.custom_roll_size}`
+          : e.rolls?.roll_number ?? '',
         User: e.profiles?.full_name ?? '',
-        'Meter Used': typeof e.meter_used === 'number' ? e.meter_used : (e.meter_used ?? ''),
-        Waste: typeof e.waste_meter === 'number' ? e.waste_meter : (e.waste_meter ?? ''),
-        'Material Cost': typeof e.material_cost === 'number' ? e.material_cost : (e.material_cost ?? ''),
-        'Waste Cost': typeof e.waste_cost === 'number' ? e.waste_cost : (e.waste_cost ?? ''),
+        'Meter Used':
+          typeof e.meter_used === 'number' ? e.meter_used : e.meter_used ?? '',
+        Waste:
+          typeof e.waste_meter === 'number'
+            ? e.waste_meter
+            : e.waste_meter ?? '',
+        'Material Cost':
+          typeof e.material_cost === 'number'
+            ? e.material_cost
+            : e.material_cost ?? '',
+        'Waste Cost':
+          typeof e.waste_cost === 'number' ? e.waste_cost : e.waste_cost ?? '',
         Status: e.status ?? '',
-        'Created At': e.created_at ? new Date(e.created_at).toLocaleDateString() : '',
+        'Created At': e.created_at
+          ? new Date(e.created_at).toLocaleDateString()
+          : '',
       }));
 
       const ws = XLSX.utils.json_to_sheet(rows);
@@ -408,175 +420,182 @@ export default function EntryList() {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-  <div className="px-6 py-4 flex items-center justify-between">
-    <div className="flex items-center gap-3 w-full">
-      <input
-        type="text"
-        placeholder="Search..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
-      />
+          <div className="px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3 w-full">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+              />
 
-      <div className="flex items-center gap-2">
-        <button
-          onClick={handleExportExcel}
-          type="button"
-          className="inline-flex items-center gap-2 px-3 py-2 bg-white border rounded-md shadow-sm hover:bg-slate-50 text-sm"
-          aria-label="Export Excel"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0l3-3m-3 3l-3-3M21 8v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11" />
-          </svg>
-          <span>Export Excel</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div className="px-6">
-
-    {/* Top Scrollbar */}
-    <div
-      ref={topScrollRef}
-      className="overflow-x-auto overflow-y-hidden sticky top-0 z-20 bg-white"
-      style={{ height: 12 }}
-    >
-      <div ref={topInnerRef} className="h-[1px]" />
-    </div>
-
-    {/* Table Scroll */}
-    <div ref={tableScrollRef} className="overflow-x-auto">
-      <table className="min-w-[1200px] w-full">
-
-        <thead className="bg-slate-50 border-b border-slate-200">
-          <tr>
-            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider sticky left-0 bg-white z-20 shadow-sm">
-              Job
-            </th>
-
-            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              Roll
-            </th>
-
-            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              User
-            </th>
-
-            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              Meter Used
-            </th>
-
-            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              Waste
-            </th>
-
-            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              Material Cost
-            </th>
-
-            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              Waste Cost
-            </th>
-
-            <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              Status
-            </th>
-
-            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              Created At
-            </th>
-
-            {profile?.role === 'admin' && (
-              <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Actions
-              </th>
-            )}
-          </tr>
-        </thead>
-
-        <tbody className="divide-y divide-slate-200">
-          {displayedEntries.map((entry) => (
-            <tr
-              key={entry.id}
-              className={
-                entry.jobs?.is_locked
-                  ? 'transition-colors bg-red-50 hover:bg-red-100'
-                  : 'transition-colors hover:bg-slate-50'
-              }
-            >
-              {/* JOB */}
-              <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10 shadow-sm">
-                <div>
-                  <p className="font-semibold text-slate-800">
-                    {entry.jobs?.job_number || 'N/A'}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {entry.jobs?.client_name || ''}
-                  </p>
-                </div>
-              </td>
-
-              {/* ROLL */}
-              <td className="px-6 py-4 whitespace-nowrap">
-                {entry.rolls?.roll_number || 'N/A'}
-              </td>
-
-              {/* USER */}
-              <td className="px-6 py-4 whitespace-nowrap">
-                {entry.profiles?.full_name || 'Unknown'}
-              </td>
-
-              {/* METER */}
-              <td className="px-6 py-4 text-right whitespace-nowrap">
-                {entry.meter_used.toFixed(2)} m
-              </td>
-
-              {/* WASTE */}
-              <td className="px-6 py-4 text-right whitespace-nowrap text-red-600">
-                {entry.waste_meter.toFixed(2)} m
-              </td>
-
-              {/* MATERIAL COST */}
-              <td className="px-6 py-4 text-right whitespace-nowrap text-blue-600">
-                {entry.material_cost.toFixed(2)}
-              </td>
-
-              {/* WASTE COST */}
-              <td className="px-6 py-4 text-right whitespace-nowrap text-red-600">
-                {entry.waste_cost.toFixed(2)}
-              </td>
-
-              {/* STATUS */}
-              <td className="px-6 py-4 text-center whitespace-nowrap">
-                {entry.status}
-              </td>
-
-              {/* DATE */}
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                {formatDate(entry.created_at)}
-              </td>
-
-              {/* ACTION */}
-              {profile?.role === 'admin' && (
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <button
-                    onClick={() => handleDeleteEntry(entry.id)}
-                    className="p-2 hover:bg-red-50 rounded-lg"
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportExcel}
+                  type="button"
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-white border rounded-md shadow-sm hover:bg-slate-50 text-sm"
+                  aria-label="Export Excel"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4 text-slate-700"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 3v12m0 0l3-3m-3 3l-3-3M21 8v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"
+                    />
+                  </svg>
+                  <span>Export Excel</span>
+                </button>
+              </div>
+            </div>
+          </div>
 
-      </table>
-    </div>
+          <div className="px-6">
+            {/* Top Scrollbar */}
+            <div
+              ref={topScrollRef}
+              className="overflow-x-auto overflow-y-hidden sticky top-0 z-20 bg-white"
+              style={{ height: 12 }}
+            >
+              <div ref={topInnerRef} className="h-[1px]" />
+            </div>
 
-  </div>
-</div>
+            {/* Table Scroll */}
+            <div ref={tableScrollRef} className="overflow-x-auto">
+              <table className="min-w-[1200px] w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider sticky left-0 bg-white z-20 shadow-sm">
+                      Job
+                    </th>
+
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Roll
+                    </th>
+
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      User
+                    </th>
+
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Meter Used
+                    </th>
+
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Waste
+                    </th>
+
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Material Cost
+                    </th>
+
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Waste Cost
+                    </th>
+
+                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Status
+                    </th>
+
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Created At
+                    </th>
+
+                    {profile?.role === 'admin' && (
+                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-200">
+                  {displayedEntries.map((entry) => (
+                    <tr
+                      key={entry.id}
+                      className={
+                        entry.jobs?.is_locked
+                          ? 'transition-colors bg-red-50 hover:bg-red-100'
+                          : 'transition-colors hover:bg-slate-50'
+                      }
+                    >
+                      {/* JOB */}
+                      <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10 shadow-sm">
+                        <div>
+                          <p className="font-semibold text-slate-800">
+                            {entry.jobs?.job_number || 'N/A'}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {entry.jobs?.client_name || ''}
+                          </p>
+                        </div>
+                      </td>
+
+                      {/* ROLL */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {entry.rolls?.roll_number || 'N/A'}
+                      </td>
+
+                      {/* USER */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {entry.profiles?.full_name || 'Unknown'}
+                      </td>
+
+                      {/* METER */}
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        {entry.meter_used.toFixed(2)} m
+                      </td>
+
+                      {/* WASTE */}
+                      <td className="px-6 py-4 text-right whitespace-nowrap text-red-600">
+                        {entry.waste_meter.toFixed(2)} m
+                      </td>
+
+                      {/* MATERIAL COST */}
+                      <td className="px-6 py-4 text-right whitespace-nowrap text-blue-600">
+                        {entry.material_cost.toFixed(2)}
+                      </td>
+
+                      {/* WASTE COST */}
+                      <td className="px-6 py-4 text-right whitespace-nowrap text-red-600">
+                        {entry.waste_cost.toFixed(2)}
+                      </td>
+
+                      {/* STATUS */}
+                      <td className="px-6 py-4 text-center whitespace-nowrap">
+                        {entry.status}
+                      </td>
+
+                      {/* DATE */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                        {formatDate(entry.created_at)}
+                      </td>
+
+                      {/* ACTION */}
+                      {profile?.role === 'admin' && (
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <button
+                            onClick={() => handleDeleteEntry(entry.id)}
+                            className="p-2 hover:bg-red-50 rounded-lg"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       )}
 
       {toast.show && (
