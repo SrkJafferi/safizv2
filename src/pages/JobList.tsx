@@ -69,6 +69,11 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
 
   const [showColumns, setShowColumns] = useState(false);
 
+  const dropdownClass = [
+    'absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg p-3 max-h-56 overflow-auto transition-transform transform origin-top-right z-50',
+    showColumns ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none',
+  ].join(' ');
+
   useEffect(() => {
     try {
       localStorage.setItem('jobTableColumns', JSON.stringify(columns));
@@ -450,14 +455,7 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
                     Columns
                   </button>
 
-                  <div
-                    className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg p-3 max-h-56 overflow-auto transition-transform transform origin-top-right z-50 ${
-                      showColumns
-                        ? 'scale-100 opacity-100'
-                        : 'scale-95 opacity-0 pointer-events-none'
-                    }`}
-                    style={{ willChange: 'transform, opacity' }}
-                  >
+                  <div className={dropdownClass} style={{ willChange: 'transform, opacity' }}>
                     <div className="text-sm font-medium mb-2">Show columns</div>
                     {(
                       Object.keys(defaultColumns) as Array<
@@ -486,52 +484,6 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
                       </label>
                     ))}
                   </div>
-              <div className="relative">
-                <button
-                  onClick={() => setShowColumns((s) => !s)}
-                  className="inline-flex items-center gap-2 px-3 py-2 bg-white border rounded-md shadow-sm hover:bg-slate-50 text-sm"
-                  aria-expanded={showColumns}
-                  aria-haspopup="true"
-                  type="button"
-                >
-                  Columns
-                </button>
-
-                <div
-                  className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg p-3 max-h-56 overflow-auto transition-transform transform origin-top-right z-50 ${
-                    showColumns
-                      ? 'scale-100 opacity-100'
-                      : 'scale-95 opacity-0 pointer-events-none'
-                  }`}
-                  style={{ willChange: 'transform, opacity' }}
-                >
-                  <div className="text-sm font-medium mb-2">Show columns</div>
-                  {(
-                    Object.keys(defaultColumns) as Array<
-                      keyof typeof defaultColumns
-                    >
-                  ).map((key) => (
-                    <label key={key} className="flex items-center gap-2 py-1">
-                      <input
-                        type="checkbox"
-                        checked={columns[key]}
-                        onChange={() => toggleColumn(key)}
-                        disabled={key === 'jobNumber'}
-                        className="h-4 w-4"
-                      />
-                      <span className="text-sm capitalize">
-                        {key === 'jobNumber'
-                          ? 'Job Number'
-                          : key === 'finalCost'
-                          ? 'Final Cost'
-                          : key === 'lockStatus'
-                          ? 'Lock Status'
-                          : key === 'createdAt'
-                          ? 'Created At'
-                          : key.charAt(0).toUpperCase() + key.slice(1)}
-                      </span>
-                    </label>
-                  ))}
                 </div>
               </div>
             </div>
