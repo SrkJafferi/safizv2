@@ -45,6 +45,42 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
   const topInnerRef = useRef<HTMLDivElement | null>(null);
 
+  const defaultColumns = {
+    jobNumber: true,
+    client: true,
+    roll: true,
+    status: true,
+    finalCost: true,
+    lockStatus: true,
+    createdAt: true,
+    actions: true,
+  } as const;
+
+  const [columns, setColumns] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem('jobTableColumns');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      // ignore
+    }
+    return { ...defaultColumns };
+  });
+
+  const [showColumns, setShowColumns] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('jobTableColumns', JSON.stringify(columns));
+    } catch (e) {
+      // ignore
+    }
+  }, [columns]);
+
+  const toggleColumn = (key: keyof typeof defaultColumns) => {
+    if (key === 'jobNumber') return; // always visible
+    setColumns((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   const [activeJobsToday, setActiveJobsToday] = useState(0);
   const [jobsCompletedToday, setJobsCompletedToday] = useState(0);
   const [totalCompleteJobs, setTotalCompleteJobs] = useState(0);
@@ -317,186 +353,255 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
       </div>
 
       {jobs.length === 0 ? (
-  <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-      <Briefcase className="w-8 h-8 text-slate-400" />
-    </div>
-    <h3 className="text-lg font-semibold text-slate-800 mb-2">
-      No Jobs Found
-    </h3>
-    <p className="text-slate-500">Start by creating your first job.</p>
-  </div>
-) : (
-  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Briefcase className="w-8 h-8 text-slate-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">
+            No Jobs Found
+          </h3>
+          <p className="text-slate-500">Start by creating your first job.</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-visible">
+          {/* Search */}
+          <div className="px-6 py-4 flex items-center justify-between relative">
+            <div className="flex items-center gap-3 w-full">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              />
 
-    {/* Search */}
-    <div className="px-6 py-4">
-      <input
-        type="text"
-        placeholder="Search..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-      />
-    </div>
+              <div className="relative">
+                <button
+                  onClick={() => setShowColumns((s) => !s)}
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-white border rounded-md shadow-sm hover:bg-slate-50 text-sm"
+                  aria-expanded={showColumns}
+                  aria-haspopup="true"
+                  type="button"
+                >
+                  Columns
+                </button>
 
-    <div className="px-6 pb-6">
+                <div
+                  className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg p-3 max-h-56 overflow-auto transition-transform transform origin-top-right z-50 ${
+                    showColumns
+                      ? 'scale-100 opacity-100'
+                      : 'scale-95 opacity-0 pointer-events-none'
+                  }`}
+                  style={{ willChange: 'transform, opacity' }}
+                >
+                  <div className="text-sm font-medium mb-2">Show columns</div>
+                  {(
+                    Object.keys(defaultColumns) as Array<
+                      keyof typeof defaultColumns
+                    >
+                  ).map((key) => (
+                    <label key={key} className="flex items-center gap-2 py-1">
+                      <input
+                        type="checkbox"
+                        checked={columns[key]}
+                        onChange={() => toggleColumn(key)}
+                        disabled={key === 'jobNumber'}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm capitalize">
+                        {key === 'jobNumber'
+                          ? 'Job Number'
+                          : key === 'finalCost'
+                          ? 'Final Cost'
+                          : key === 'lockStatus'
+                          ? 'Lock Status'
+                          : key === 'createdAt'
+                          ? 'Created At'
+                          : key.charAt(0).toUpperCase() + key.slice(1)}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
-      {/* Top Scrollbar */}
-      <div
-        ref={topScrollRef}
-        className="overflow-x-auto overflow-y-hidden bg-white"
-        style={{ height: 12 }}
-      >
-        <div ref={topInnerRef} style={{ width: '1px', height: 1 }} />
-      </div>
+          <div className="px-6 pb-6">
+            {/* Top Scrollbar */}
+            <div
+              ref={topScrollRef}
+              className="overflow-x-auto overflow-y-hidden bg-white"
+              style={{ height: 12 }}
+            >
+              <div ref={topInnerRef} style={{ width: '1px', height: 1 }} />
+            </div>
 
-      {/* Table Scroll */}
-      <div ref={tableScrollRef} className="overflow-x-auto">
+            {/* Table Scroll */}
+            <div ref={tableScrollRef} className="overflow-x-auto">
+              <table className="min-w-[1200px] w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    {columns.jobNumber && (
+                      <th className="sticky left-0 z-10 bg-white text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                        Job Number
+                      </th>
+                    )}
 
-        <table className="min-w-[1200px] w-full">
+                    {columns.client && (
+                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                        Client
+                      </th>
+                    )}
 
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
+                    {columns.roll && (
+                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                        Roll
+                      </th>
+                    )}
 
-              <th className="sticky left-0 z-10 bg-white text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
-                Job Number
-              </th>
+                    {columns.status && (
+                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                        Status
+                      </th>
+                    )}
 
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
-                Client
-              </th>
+                    {columns.finalCost && (
+                      <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                        Final Cost
+                      </th>
+                    )}
 
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
-                Roll
-              </th>
+                    {columns.lockStatus && (
+                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                        Lock Status
+                      </th>
+                    )}
 
-              <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
-                Status
-              </th>
+                    {columns.createdAt && (
+                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                        Created At
+                      </th>
+                    )}
 
-              <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
-                Final Cost
-              </th>
-
-              <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
-                Lock Status
-              </th>
-
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
-                Created At
-              </th>
-
-              {(profile?.role === 'admin' || profile?.role === 'manager') && (
-                <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
-                  Actions
-                </th>
-              )}
-
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-slate-200">
-            {displayedJobs.map((job) => (
-              <tr key={job.id} className="hover:bg-slate-50 transition-colors">
-
-                <td className="sticky left-0 z-10 bg-white px-6 py-4 whitespace-nowrap">
-                  <p className="font-semibold text-slate-800">
-                    {job.job_number}
-                  </p>
-
-                  {job.description && (
-                    <p className="text-xs text-slate-500 mt-1">
-                      {job.description}
-                    </p>
-                  )}
-                </td>
-
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {job.client_name}
-                </td>
-
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {job.selected_roll_id ? "Assigned" : "Not assigned"}
-                </td>
-
-                <td className="px-6 py-4 text-center whitespace-nowrap">
-                  {getStatusBadge(job.status)}
-                </td>
-
-                <td className="px-6 py-4 text-right whitespace-nowrap">
-                  {job.final_cost.toFixed(2)}
-                </td>
-
-                <td className="px-6 py-4 text-center whitespace-nowrap">
-                  {job.is_locked ? "Locked" : "Unlocked"}
-                </td>
-
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {new Date(job.created_at).toLocaleDateString()}
-                </td>
-
-                {(profile?.role === 'admin' ||
-                  profile?.role === 'manager') && (
-                  <td className="px-6 py-4 text-center whitespace-nowrap">
-
-                    <div className="flex items-center justify-center gap-2">
-
-                      {!job.is_locked && (
-                        <button
-                          onClick={() =>
-                            onNavigateToUpdateJob?.(job.id)
-                          }
-                          className="p-2 hover:bg-blue-50 rounded-lg"
-                        >
-                          <Edit className="w-4 h-4 text-blue-600" />
-                        </button>
+                    {columns.actions &&
+                      (profile?.role === 'admin' ||
+                        profile?.role === 'manager') && (
+                        <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                          Actions
+                        </th>
                       )}
+                  </tr>
+                </thead>
 
-                      {profile?.role === 'admin' && (
-                        <>
-                          <button
-                            onClick={() =>
-                              handleToggleLock(job.id, job.is_locked)
-                            }
-                            className="p-2 hover:bg-slate-100 rounded-lg"
-                          >
-                            {job.is_locked ? (
-                              <Unlock className="w-4 h-4 text-slate-600" />
-                            ) : (
-                              <Lock className="w-4 h-4 text-slate-600" />
-                            )}
-                          </button>
-
-                          {!job.is_locked && (
-                            <button
-                              onClick={() =>
-                                handleDeleteJob(job.id, job.job_number)
-                              }
-                              className="p-2 hover:bg-red-50 rounded-lg"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                            </button>
+                <tbody className="divide-y divide-slate-200">
+                  {displayedJobs.map((job) => (
+                    <tr
+                      key={job.id}
+                      className="hover:bg-slate-50 transition-colors"
+                    >
+                      {columns.jobNumber && (
+                        <td className="sticky left-0 z-10 bg-white px-6 py-4 whitespace-nowrap">
+                          <p className="font-semibold text-slate-800">
+                            {job.job_number}
+                          </p>
+                          {job.description && (
+                            <p className="text-xs text-slate-500 mt-1">
+                              {job.description}
+                            </p>
                           )}
-                        </>
+                        </td>
                       )}
 
-                    </div>
+                      {columns.client && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {job.client_name}
+                        </td>
+                      )}
 
-                  </td>
-                )}
+                      {columns.roll && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {job.selected_roll_id ? 'Assigned' : 'Not assigned'}
+                        </td>
+                      )}
 
-              </tr>
-            ))}
-          </tbody>
+                      {columns.status && (
+                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                          {getStatusBadge(job.status)}
+                        </td>
+                      )}
 
-        </table>
+                      {columns.finalCost && (
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                          {job.final_cost.toFixed(2)}
+                        </td>
+                      )}
 
-      </div>
-    </div>
+                      {columns.lockStatus && (
+                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                          {job.is_locked ? 'Locked' : 'Unlocked'}
+                        </td>
+                      )}
 
-  </div>
-)}
+                      {columns.createdAt && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {new Date(job.created_at).toLocaleDateString()}
+                        </td>
+                      )}
+
+                      {columns.actions &&
+                        (profile?.role === 'admin' ||
+                          profile?.role === 'manager') && (
+                          <td className="px-6 py-4 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-2">
+                              {!job.is_locked && (
+                                <button
+                                  onClick={() =>
+                                    onNavigateToUpdateJob?.(job.id)
+                                  }
+                                  className="p-2 hover:bg-blue-50 rounded-lg"
+                                >
+                                  <Edit className="w-4 h-4 text-blue-600" />
+                                </button>
+                              )}
+
+                              {profile?.role === 'admin' && (
+                                <>
+                                  <button
+                                    onClick={() =>
+                                      handleToggleLock(job.id, job.is_locked)
+                                    }
+                                    className="p-2 hover:bg-slate-100 rounded-lg"
+                                  >
+                                    {job.is_locked ? (
+                                      <Unlock className="w-4 h-4 text-slate-600" />
+                                    ) : (
+                                      <Lock className="w-4 h-4 text-slate-600" />
+                                    )}
+                                  </button>
+
+                                  {!job.is_locked && (
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteJob(job.id, job.job_number)
+                                      }
+                                      className="p-2 hover:bg-red-50 rounded-lg"
+                                    >
+                                      <Trash2 className="w-4 h-4 text-red-600" />
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast.show && (
         <div
