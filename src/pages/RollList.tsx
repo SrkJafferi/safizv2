@@ -50,6 +50,11 @@ export default function RollList({
 
   const [showColumns, setShowColumns] = useState(false);
 
+  const dropdownClass = [
+    'absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg p-3 max-h-56 overflow-auto transition-transform transform origin-top-right z-50',
+    showColumns ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none',
+  ].join(' ');
+
   useEffect(() => {
     try {
       localStorage.setItem('rollTableColumns', JSON.stringify(columns));
@@ -209,22 +214,34 @@ export default function RollList({
           className="bg-white rounded-xl p-6 border border-slate-200"
           style={{ backgroundColor: '#eff6ff' }}
         >
-          <p className="text-sm font-medium text-slate-500">Total Material Usage</p>
-          <p className="text-2xl font-bold text-blue-600 mt-2">{totalMaterialUsage.toFixed(2)}</p>
+          <p className="text-sm font-medium text-slate-500">
+            Total Material Usage
+          </p>
+          <p className="text-2xl font-bold text-blue-600 mt-2">
+            {totalMaterialUsage.toFixed(2)}
+          </p>
         </div>
         <div
           className="bg-white rounded-xl p-6 border border-slate-200"
           style={{ backgroundColor: '#f0fdf4' }}
         >
-          <p className="text-sm font-medium text-slate-500">Total Meter Used Today</p>
-          <p className="text-2xl font-bold text-green-600 mt-2">{totalMeterToday.toFixed(2)} m</p>
+          <p className="text-sm font-medium text-slate-500">
+            Total Meter Used Today
+          </p>
+          <p className="text-2xl font-bold text-green-600 mt-2">
+            {totalMeterToday.toFixed(2)} m
+          </p>
         </div>
         <div
           className="bg-white rounded-xl p-6 border border-slate-200"
           style={{ backgroundColor: '#ffebed' }}
         >
-          <p className="text-sm font-medium text-slate-500">Total Waste Today</p>
-          <p className="text-2xl font-bold text-red-600 mt-2">{totalWasteToday.toFixed(2)} m</p>
+          <p className="text-sm font-medium text-slate-500">
+            Total Waste Today
+          </p>
+          <p className="text-2xl font-bold text-red-600 mt-2">
+            {totalWasteToday.toFixed(2)} m
+          </p>
         </div>
       </div>
 
@@ -234,7 +251,9 @@ export default function RollList({
             <Package className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Roll Inventory</h2>
+            <h2 className="text-2xl font-bold text-slate-800">
+              Roll Inventory
+            </h2>
             <p className="text-slate-500 mt-1">View all inventory rolls</p>
           </div>
         </div>
@@ -262,8 +281,12 @@ export default function RollList({
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Package className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">No Rolls Found</h3>
-          <p className="text-slate-500">Start by adding your first roll to the inventory.</p>
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">
+            No Rolls Found
+          </h3>
+          <p className="text-slate-500">
+            Start by adding your first roll to the inventory.
+          </p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-visible">
@@ -288,18 +311,12 @@ export default function RollList({
                   Columns
                 </button>
 
-                <div
-                  className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg p-3 max-h-56 overflow-auto transition-transform transform origin-top-right z-50 ${
-                    showColumns
-                      ? 'scale-100 opacity-100'
-                      : 'scale-95 opacity-0 pointer-events-none'
-                    showColumns ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
-                  }`}
-                  style={{ willChange: 'transform, opacity' }}
-                >
+                <div className={dropdownClass} style={{ willChange: 'transform, opacity' }}>
                   <div className="text-sm font-medium mb-2">Show columns</div>
                   {(
-                    Object.keys(defaultColumns) as Array<keyof typeof defaultColumns>
+                    Object.keys(defaultColumns) as Array<
+                      keyof typeof defaultColumns
+                    >
                   ).map((key) => (
                     <label key={key} className="flex items-center gap-2 py-1">
                       <input
@@ -391,34 +408,6 @@ export default function RollList({
                       <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         Actions
                       </th>
-                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider sticky left-0 bg-white z-10">Roll Number</th>
-                    )}
-                    {columns.size && (
-                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Size</th>
-                    )}
-                    {columns.type && (
-                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Type</th>
-                    )}
-                    {columns.brand && (
-                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Brand</th>
-                    )}
-                    {columns.totalMeter && (
-                      <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Total Meter</th>
-                    )}
-                    {columns.remainingMeter && (
-                      <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Remaining Meter</th>
-                    )}
-                    {columns.costPerMeter && (
-                      <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Cost Per Meter</th>
-                    )}
-                    {columns.status && (
-                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
-                    )}
-                    {columns.createdAt && (
-                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Created At</th>
-                    )}
-                    {columns.actions && canEditRoll && (
-                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
                     )}
                   </tr>
                 </thead>
