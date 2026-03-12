@@ -25,6 +25,44 @@ export default function RollList({
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
   const topInnerRef = useRef<HTMLDivElement | null>(null);
 
+  const defaultColumns = {
+    rollNumber: true,
+    size: true,
+    type: true,
+    brand: true,
+    totalMeter: true,
+    remainingMeter: true,
+    costPerMeter: true,
+    status: true,
+    createdAt: true,
+    actions: true,
+  } as const;
+
+  const [columns, setColumns] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem('rollTableColumns');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      // ignore
+    }
+    return { ...defaultColumns };
+  });
+
+  const [showColumns, setShowColumns] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('rollTableColumns', JSON.stringify(columns));
+    } catch (e) {
+      // ignore
+    }
+  }, [columns]);
+
+  const toggleColumn = (key: keyof typeof defaultColumns) => {
+    if (key === 'rollNumber') return; // always visible
+    setColumns((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   useEffect(() => {
     loadRolls();
   }, []);
@@ -228,15 +266,64 @@ export default function RollList({
           <p className="text-slate-500">Start by adding your first roll to the inventory.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-            />
+        <div className="bg-white rounded-xl border border-slate-200 overflow-visible">
+          <div className="px-6 py-4 flex items-center justify-between relative">
+            <div className="flex items-center gap-3 w-full">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowColumns((s) => !s)}
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-white border rounded-md shadow-sm hover:bg-slate-50 text-sm"
+                  aria-expanded={showColumns}
+                  aria-haspopup="true"
+                  type="button"
+                >
+                  Columns
+                </button>
+
+                <div
+                  className={`absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg p-3 max-h-56 overflow-auto transition-transform transform origin-top-right z-50 ${
+                    showColumns ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
+                  }`}
+                  style={{ willChange: 'transform, opacity' }}
+                >
+                  <div className="text-sm font-medium mb-2">Show columns</div>
+                  {(
+                    Object.keys(defaultColumns) as Array<keyof typeof defaultColumns>
+                  ).map((key) => (
+                    <label key={key} className="flex items-center gap-2 py-1">
+                      <input
+                        type="checkbox"
+                        checked={columns[key]}
+                        onChange={() => toggleColumn(key)}
+                        disabled={key === 'rollNumber'}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm">
+                        {key === 'rollNumber'
+                          ? 'Roll Number'
+                          : key === 'totalMeter'
+                          ? 'Total Meter'
+                          : key === 'remainingMeter'
+                          ? 'Remaining Meter'
+                          : key === 'costPerMeter'
+                          ? 'Cost Per Meter'
+                          : key === 'createdAt'
+                          ? 'Created At'
+                          : key.charAt(0).toUpperCase() + key.slice(1)}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="px-6">
@@ -252,16 +339,34 @@ export default function RollList({
               <table className="min-w-[1200px]">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider sticky left-0 bg-white z-10">Roll Number</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Size</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Type</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Brand</th>
-                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Total Meter</th>
-                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Remaining Meter</th>
-                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Cost Per Meter</th>
-                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
-                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Created At</th>
-                    {canEditRoll && (
+                    {columns.rollNumber && (
+                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider sticky left-0 bg-white z-10">Roll Number</th>
+                    )}
+                    {columns.size && (
+                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Size</th>
+                    )}
+                    {columns.type && (
+                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Type</th>
+                    )}
+                    {columns.brand && (
+                      <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Brand</th>
+                    )}
+                    {columns.totalMeter && (
+                      <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Total Meter</th>
+                    )}
+                    {columns.remainingMeter && (
+                      <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Remaining Meter</th>
+                    )}
+                    {columns.costPerMeter && (
+                      <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Cost Per Meter</th>
+                    )}
+                    {columns.status && (
+                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
+                    )}
+                    {columns.createdAt && (
+                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Created At</th>
+                    )}
+                    {columns.actions && canEditRoll && (
                       <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
                     )}
                   </tr>
@@ -269,23 +374,51 @@ export default function RollList({
                 <tbody className="divide-y divide-slate-200">
                   {displayedRolls.map((roll) => (
                     <tr key={roll.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-20 shadow-sm">
-                        <button
-                          onClick={() => onNavigateToRollDetail && onNavigateToRollDetail(roll.id)}
-                          className="px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
-                        >
-                          {roll.roll_number}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap"><p className="text-slate-600">{roll.size || '-'}</p></td>
-                      <td className="px-6 py-4 whitespace-nowrap"><p className="text-slate-600">{roll.type || '-'}</p></td>
-                      <td className="px-6 py-4 whitespace-nowrap"><p className="text-slate-600">{roll.brand || '-'}</p></td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap"><p className="font-medium text-slate-800">{roll.total_meter.toFixed(2)} m</p></td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap"><p className={`font-medium ${roll.remaining_meter === 0 ? 'text-red-600' : 'text-green-600'}`}>{roll.remaining_meter.toFixed(2)} m</p></td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap"><p className="font-medium text-slate-800">{roll.cost_per_meter.toFixed(2)}</p></td>
-                      <td className="px-6 py-4 text-center whitespace-nowrap">{getStatusBadge(roll.status)}</td>
-                      <td className="px-6 py-4 text-center whitespace-nowrap"><p className="text-sm text-slate-600">{new Date(roll.created_at).toLocaleDateString()} {new Date(roll.created_at).toLocaleTimeString()}</p></td>
-                      {canEditRoll && (
+
+                      {columns.rollNumber && (
+                        <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-20 shadow-sm">
+                          <button
+                            onClick={() => onNavigateToRollDetail && onNavigateToRollDetail(roll.id)}
+                            className="px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
+                          >
+                            {roll.roll_number}
+                          </button>
+                        </td>
+                      )}
+
+                      {columns.size && (
+                        <td className="px-6 py-4 whitespace-nowrap"><p className="text-slate-600">{roll.size || '-'}</p></td>
+                      )}
+
+                      {columns.type && (
+                        <td className="px-6 py-4 whitespace-nowrap"><p className="text-slate-600">{roll.type || '-'}</p></td>
+                      )}
+
+                      {columns.brand && (
+                        <td className="px-6 py-4 whitespace-nowrap"><p className="text-slate-600">{roll.brand || '-'}</p></td>
+                      )}
+
+                      {columns.totalMeter && (
+                        <td className="px-6 py-4 text-right whitespace-nowrap"><p className="font-medium text-slate-800">{roll.total_meter.toFixed(2)} m</p></td>
+                      )}
+
+                      {columns.remainingMeter && (
+                        <td className="px-6 py-4 text-right whitespace-nowrap"><p className={`font-medium ${roll.remaining_meter === 0 ? 'text-red-600' : 'text-green-600'}`}>{roll.remaining_meter.toFixed(2)} m</p></td>
+                      )}
+
+                      {columns.costPerMeter && (
+                        <td className="px-6 py-4 text-right whitespace-nowrap"><p className="font-medium text-slate-800">{roll.cost_per_meter.toFixed(2)}</p></td>
+                      )}
+
+                      {columns.status && (
+                        <td className="px-6 py-4 text-center whitespace-nowrap">{getStatusBadge(roll.status)}</td>
+                      )}
+
+                      {columns.createdAt && (
+                        <td className="px-6 py-4 text-center whitespace-nowrap"><p className="text-sm text-slate-600">{new Date(roll.created_at).toLocaleDateString()} {new Date(roll.created_at).toLocaleTimeString()}</p></td>
+                      )}
+
+                      {columns.actions && canEditRoll && (
                         <td className="px-6 py-4 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-2 flex-wrap">
                             <button onClick={() => onNavigateToRollDetail && onNavigateToRollDetail(roll.id)} className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-600 text-sm font-medium rounded-lg transition-colors"><Eye className="w-4 h-4" />Details</button>
@@ -293,6 +426,7 @@ export default function RollList({
                           </div>
                         </td>
                       )}
+
                     </tr>
                   ))}
                 </tbody>
