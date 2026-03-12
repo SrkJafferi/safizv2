@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Briefcase,
   Loader2,
@@ -41,6 +41,9 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
   });
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const topScrollRef = useRef<HTMLDivElement | null>(null);
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const topInnerRef = useRef<HTMLDivElement | null>(null);
 
   const [activeJobsToday, setActiveJobsToday] = useState(0);
   const [jobsCompletedToday, setJobsCompletedToday] = useState(0);
@@ -92,6 +95,44 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
   const displayedJobs = jobs.filter((item) =>
     JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    const top = topScrollRef.current;
+    const table = tableScrollRef.current;
+    if (!top || !table) return;
+
+    if (topInnerRef.current) {
+      try {
+        topInnerRef.current.style.width = `${table.scrollWidth}px`;
+      } catch (e) {
+        // noop
+      }
+    }
+
+    const onTopScroll = () => {
+      if (table) table.scrollLeft = top.scrollLeft;
+    };
+    const onTableScroll = () => {
+      if (top) top.scrollLeft = table.scrollLeft;
+    };
+
+    top.addEventListener('scroll', onTopScroll);
+    table.addEventListener('scroll', onTableScroll);
+
+    const onResize = () => {
+      if (topInnerRef.current) {
+        topInnerRef.current.style.width = `${table.scrollWidth}px`;
+      }
+    };
+
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      top.removeEventListener('scroll', onTopScroll);
+      table.removeEventListener('scroll', onTableScroll);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [loading, jobs]);
 
   const showToast = (type: 'success' | 'error', message: string) => {
     setToast({ show: true, type, message });
@@ -276,188 +317,186 @@ export default function JobList({ onNavigateToUpdateJob }: JobListProps) {
       </div>
 
       {jobs.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Briefcase className="w-8 h-8 text-slate-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">
-            No Jobs Found
-          </h3>
-          <p className="text-slate-500">Start by creating your first job.</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Job Number
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Roll
-                  </th>
-                  <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Final Cost
-                  </th>
-                  <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Lock Status
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Created At
-                  </th>
-                  {(profile?.role === 'admin' ||
-                    profile?.role === 'manager') && (
-                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Actions
-                    </th>
+  <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <Briefcase className="w-8 h-8 text-slate-400" />
+    </div>
+    <h3 className="text-lg font-semibold text-slate-800 mb-2">
+      No Jobs Found
+    </h3>
+    <p className="text-slate-500">Start by creating your first job.</p>
+  </div>
+) : (
+  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+
+    {/* Search */}
+    <div className="px-6 py-4">
+      <input
+        type="text"
+        placeholder="Search..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+      />
+    </div>
+
+    <div className="px-6 pb-6">
+
+      {/* Top Scrollbar */}
+      <div
+        ref={topScrollRef}
+        className="overflow-x-auto overflow-y-hidden bg-white"
+        style={{ height: 12 }}
+      >
+        <div ref={topInnerRef} style={{ width: '1px', height: 1 }} />
+      </div>
+
+      {/* Table Scroll */}
+      <div ref={tableScrollRef} className="overflow-x-auto">
+
+        <table className="min-w-[1200px] w-full">
+
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr>
+
+              <th className="sticky left-0 z-10 bg-white text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                Job Number
+              </th>
+
+              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                Client
+              </th>
+
+              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                Roll
+              </th>
+
+              <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                Status
+              </th>
+
+              <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                Final Cost
+              </th>
+
+              <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                Lock Status
+              </th>
+
+              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                Created At
+              </th>
+
+              {(profile?.role === 'admin' || profile?.role === 'manager') && (
+                <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase">
+                  Actions
+                </th>
+              )}
+
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-slate-200">
+            {displayedJobs.map((job) => (
+              <tr key={job.id} className="hover:bg-slate-50 transition-colors">
+
+                <td className="sticky left-0 z-10 bg-white px-6 py-4 whitespace-nowrap">
+                  <p className="font-semibold text-slate-800">
+                    {job.job_number}
+                  </p>
+
+                  {job.description && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      {job.description}
+                    </p>
                   )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {displayedJobs.map((job) => (
-                  <tr
-                    key={job.id}
-                    className="hover:bg-slate-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-semibold text-slate-800">
-                        {job.job_number}
-                      </p>
-                      {job.description && (
-                        <p className="text-xs text-slate-500 mt-1">
-                          {job.description}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-slate-800">{job.client_name}</p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-slate-600 text-sm">
-                        {job.selected_roll_id ? 'Assigned' : 'Not assigned'}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-center whitespace-nowrap">
-                      {profile?.role === 'admin' && !job.is_locked ? (
-                        <select
-                          value={job.status}
-                          onChange={(e) =>
-                            handleStatusChange(
-                              job.id,
-                              e.target.value as JobStatus
-                            )
+                </td>
+
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {job.client_name}
+                </td>
+
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {job.selected_roll_id ? "Assigned" : "Not assigned"}
+                </td>
+
+                <td className="px-6 py-4 text-center whitespace-nowrap">
+                  {getStatusBadge(job.status)}
+                </td>
+
+                <td className="px-6 py-4 text-right whitespace-nowrap">
+                  {job.final_cost.toFixed(2)}
+                </td>
+
+                <td className="px-6 py-4 text-center whitespace-nowrap">
+                  {job.is_locked ? "Locked" : "Unlocked"}
+                </td>
+
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {new Date(job.created_at).toLocaleDateString()}
+                </td>
+
+                {(profile?.role === 'admin' ||
+                  profile?.role === 'manager') && (
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+
+                    <div className="flex items-center justify-center gap-2">
+
+                      {!job.is_locked && (
+                        <button
+                          onClick={() =>
+                            onNavigateToUpdateJob?.(job.id)
                           }
-                          disabled={updatingJobId === job.id}
-                          className="px-3 py-1 rounded-full text-xs font-semibold border focus:ring-2 focus:ring-blue-500 outline-none"
+                          className="p-2 hover:bg-blue-50 rounded-lg"
                         >
-                          <option value="Open">Open</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Closed">Closed</option>
-                        </select>
-                      ) : (
-                        getStatusBadge(job.status)
+                          <Edit className="w-4 h-4 text-blue-600" />
+                        </button>
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <p className="font-medium text-slate-800">
-                        {job.final_cost.toFixed(2)}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-center whitespace-nowrap">
-                      {job.is_locked ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
-                          <Lock className="w-3 h-3" />
-                          Locked
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
-                          <Unlock className="w-3 h-3" />
-                          Unlocked
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-sm text-slate-600">
-                        {new Date(job.created_at).toLocaleDateString()}{' '}
-                        {new Date(job.created_at).toLocaleTimeString()}
-                      </p>
-                    </td>
-                    {(profile?.role === 'admin' ||
-                      profile?.role === 'manager') && (
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-2 flex-wrap">
+
+                      {profile?.role === 'admin' && (
+                        <>
+                          <button
+                            onClick={() =>
+                              handleToggleLock(job.id, job.is_locked)
+                            }
+                            className="p-2 hover:bg-slate-100 rounded-lg"
+                          >
+                            {job.is_locked ? (
+                              <Unlock className="w-4 h-4 text-slate-600" />
+                            ) : (
+                              <Lock className="w-4 h-4 text-slate-600" />
+                            )}
+                          </button>
+
                           {!job.is_locked && (
                             <button
-                              onClick={() => {
-                                if (onNavigateToUpdateJob) {
-                                  onNavigateToUpdateJob(job.id);
-                                }
-                              }}
-                              disabled={updatingJobId === job.id}
-                              className="p-2 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
-                              title="Edit job"
+                              onClick={() =>
+                                handleDeleteJob(job.id, job.job_number)
+                              }
+                              className="p-2 hover:bg-red-50 rounded-lg"
                             >
-                              <Edit className="w-4 h-4 text-blue-600" />
+                              <Trash2 className="w-4 h-4 text-red-600" />
                             </button>
                           )}
-                          {profile?.role === 'admin' && (
-                            <>
-                              <button
-                                onClick={() =>
-                                  handleToggleLock(job.id, job.is_locked)
-                                }
-                                disabled={updatingJobId === job.id}
-                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                                title={
-                                  job.is_locked ? 'Unlock job' : 'Lock job'
-                                }
-                              >
-                                {job.is_locked ? (
-                                  <Unlock className="w-4 h-4 text-slate-600" />
-                                ) : (
-                                  <Lock className="w-4 h-4 text-slate-600" />
-                                )}
-                              </button>
-                              {!job.is_locked && (
-                                <button
-                                  onClick={() =>
-                                    handleDeleteJob(job.id, job.job_number)
-                                  }
-                                  disabled={updatingJobId === job.id}
-                                  className="p-2 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                                  title="Delete job"
-                                >
-                                  <Trash2 className="w-4 h-4 text-red-600" />
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                        </>
+                      )}
+
+                    </div>
+
+                  </td>
+                )}
+
+              </tr>
+            ))}
+          </tbody>
+
+        </table>
+
+      </div>
+    </div>
+
+  </div>
+)}
 
       {toast.show && (
         <div
