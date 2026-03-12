@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Package, Loader2, CreditCard as Edit, Eye } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,6 +21,9 @@ export default function RollList({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const topScrollRef = useRef<HTMLDivElement | null>(null);
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const topInnerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     loadRolls();
@@ -61,6 +64,45 @@ export default function RollList({
   const displayedRolls = rolls.filter((item) =>
     JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    const top = topScrollRef.current;
+    const table = tableScrollRef.current;
+    if (!top || !table) return;
+
+    // ensure the top scrollbar inner width matches the table's full scroll width
+    if (topInnerRef.current) {
+      try {
+        topInnerRef.current.style.width = `${table.scrollWidth}px`;
+      } catch (e) {
+        // noop
+      }
+    }
+
+    const onTopScroll = () => {
+      if (table) table.scrollLeft = top.scrollLeft;
+    };
+    const onTableScroll = () => {
+      if (top) top.scrollLeft = table.scrollLeft;
+    };
+
+    top.addEventListener('scroll', onTopScroll);
+    table.addEventListener('scroll', onTableScroll);
+
+    const onResize = () => {
+      if (topInnerRef.current) {
+        topInnerRef.current.style.width = `${table.scrollWidth}px`;
+      }
+    };
+
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      top.removeEventListener('scroll', onTopScroll);
+      table.removeEventListener('scroll', onTableScroll);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [loading, rolls]);
 
   const [totalMaterialUsage, setTotalMaterialUsage] = useState(0);
   const [totalMeterToday, setTotalMeterToday] = useState(0);
@@ -129,45 +171,32 @@ export default function RollList({
           className="bg-white rounded-xl p-6 border border-slate-200"
           style={{ backgroundColor: '#eff6ff' }}
         >
-          <p className="text-sm font-medium text-slate-500">
-            Total Material Usage
-          </p>
-          <p className="text-2xl font-bold text-blue-600 mt-2">
-            {totalMaterialUsage.toFixed(2)}
-          </p>
+          <p className="text-sm font-medium text-slate-500">Total Material Usage</p>
+          <p className="text-2xl font-bold text-blue-600 mt-2">{totalMaterialUsage.toFixed(2)}</p>
         </div>
         <div
           className="bg-white rounded-xl p-6 border border-slate-200"
           style={{ backgroundColor: '#f0fdf4' }}
         >
-          <p className="text-sm font-medium text-slate-500">
-            Total Meter Used Today
-          </p>
-          <p className="text-2xl font-bold text-green-600 mt-2">
-            {totalMeterToday.toFixed(2)} m
-          </p>
+          <p className="text-sm font-medium text-slate-500">Total Meter Used Today</p>
+          <p className="text-2xl font-bold text-green-600 mt-2">{totalMeterToday.toFixed(2)} m</p>
         </div>
         <div
           className="bg-white rounded-xl p-6 border border-slate-200"
           style={{ backgroundColor: '#ffebed' }}
         >
-          <p className="text-sm font-medium text-slate-500">
-            Total Waste Today
-          </p>
-          <p className="text-2xl font-bold text-red-600 mt-2">
-            {totalWasteToday.toFixed(2)} m
-          </p>
+          <p className="text-sm font-medium text-slate-500">Total Waste Today</p>
+          <p className="text-2xl font-bold text-red-600 mt-2">{totalWasteToday.toFixed(2)} m</p>
         </div>
       </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
             <Package className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">
-              Roll Inventory
-            </h2>
+            <h2 className="text-2xl font-bold text-slate-800">Roll Inventory</h2>
             <p className="text-slate-500 mt-1">View all inventory rolls</p>
           </div>
         </div>
@@ -195,12 +224,8 @@ export default function RollList({
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Package className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">
-            No Rolls Found
-          </h3>
-          <p className="text-slate-500">
-            Start by adding your first roll to the inventory.
-          </p>
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">No Rolls Found</h3>
+          <p className="text-slate-500">Start by adding your first roll to the inventory.</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -213,133 +238,66 @@ export default function RollList({
               className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Roll Number
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Size
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Brand
-                  </th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Total Meter
-                  </th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Remaining Meter
-                  </th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Cost Per Meter
-                  </th>
-                  <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Created At
-                  </th>
-                  {canEditRoll && (
-                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {displayedRolls.map((roll) => (
-                  <tr
-                    key={roll.id}
-                    className="hover:bg-slate-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => {
-                          if (onNavigateToRollDetail) {
-                            onNavigateToRollDetail(roll.id);
-                          }
-                        }}
-                        className="px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
-                      >
-                        {roll.roll_number}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-slate-600">{roll.size || '-'}</p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-slate-600">{roll.type || '-'}</p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-slate-600">{roll.brand || '-'}</p>
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <p className="font-medium text-slate-800">
-                        {roll.total_meter.toFixed(2)} m
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <p
-                        className={`font-medium ${
-                          roll.remaining_meter === 0
-                            ? 'text-red-600'
-                            : 'text-green-600'
-                        }`}
-                      >
-                        {roll.remaining_meter.toFixed(2)} m
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <p className="font-medium text-slate-800">
-                        {roll.cost_per_meter.toFixed(2)}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-center whitespace-nowrap">
-                      {getStatusBadge(roll.status)}
-                    </td>
-                    <td className="px-6 py-4 text-center whitespace-nowrap">
-                      <p className="text-sm text-slate-600">
-                        {new Date(roll.created_at).toLocaleDateString()}{' '}
-                        {new Date(roll.created_at).toLocaleTimeString()}
-                      </p>
-                    </td>
+
+          <div className="px-6">
+            <div
+              ref={topScrollRef}
+              className="overflow-x-auto overflow-y-hidden sticky top-0 z-20 bg-white"
+              style={{ height: 12 }}
+            >
+              <div ref={topInnerRef} style={{ width: '1px', height: 1 }} />
+            </div>
+
+            <div ref={tableScrollRef} className="overflow-x-auto">
+              <table className="min-w-[1200px]">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider sticky left-0 bg-white z-10">Roll Number</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Size</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Type</th>
+                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Brand</th>
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Total Meter</th>
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Remaining Meter</th>
+                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Cost Per Meter</th>
+                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
+                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Created At</th>
                     {canEditRoll && (
-                      <td className="px-6 py-4 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => {
-                              if (onNavigateToRollDetail) {
-                                onNavigateToRollDetail(roll.id);
-                              }
-                            }}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-600 text-sm font-medium rounded-lg transition-colors"
-                          >
-                            <Eye className="w-4 h-4" />
-                            Details
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (onNavigateToUpdateRoll) {
-                                onNavigateToUpdateRoll(roll.id);
-                              }
-                            }}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-sm font-medium rounded-lg transition-colors"
-                          >
-                            <Edit className="w-4 h-4" />
-                            Update
-                          </button>
-                        </div>
-                      </td>
+                      <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
                     )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {displayedRolls.map((roll) => (
+                    <tr key={roll.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-20 shadow-sm">
+                        <button
+                          onClick={() => onNavigateToRollDetail && onNavigateToRollDetail(roll.id)}
+                          className="px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
+                        >
+                          {roll.roll_number}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap"><p className="text-slate-600">{roll.size || '-'}</p></td>
+                      <td className="px-6 py-4 whitespace-nowrap"><p className="text-slate-600">{roll.type || '-'}</p></td>
+                      <td className="px-6 py-4 whitespace-nowrap"><p className="text-slate-600">{roll.brand || '-'}</p></td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap"><p className="font-medium text-slate-800">{roll.total_meter.toFixed(2)} m</p></td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap"><p className={`font-medium ${roll.remaining_meter === 0 ? 'text-red-600' : 'text-green-600'}`}>{roll.remaining_meter.toFixed(2)} m</p></td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap"><p className="font-medium text-slate-800">{roll.cost_per_meter.toFixed(2)}</p></td>
+                      <td className="px-6 py-4 text-center whitespace-nowrap">{getStatusBadge(roll.status)}</td>
+                      <td className="px-6 py-4 text-center whitespace-nowrap"><p className="text-sm text-slate-600">{new Date(roll.created_at).toLocaleDateString()} {new Date(roll.created_at).toLocaleTimeString()}</p></td>
+                      {canEditRoll && (
+                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-2 flex-wrap">
+                            <button onClick={() => onNavigateToRollDetail && onNavigateToRollDetail(roll.id)} className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-600 text-sm font-medium rounded-lg transition-colors"><Eye className="w-4 h-4" />Details</button>
+                            <button onClick={() => onNavigateToUpdateRoll && onNavigateToUpdateRoll(roll.id)} className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-sm font-medium rounded-lg transition-colors"><Edit className="w-4 h-4" />Update</button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
