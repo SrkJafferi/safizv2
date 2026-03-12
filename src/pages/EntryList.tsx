@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FileText, Loader2, Trash2, Filter } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,6 +29,10 @@ export default function EntryList() {
   const [updatingEntryId, setUpdatingEntryId] = useState<string | null>(null);
   const [filterRole, setFilterRole] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+
+  const topScrollRef = useRef<HTMLDivElement | null>(null);
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const topInnerRef = useRef<HTMLDivElement | null>(null);
 
   const [totalMaterialUsage, setTotalMaterialUsage] = useState(0);
   const [totalMeterToday, setTotalMeterToday] = useState(0);
@@ -103,6 +107,8 @@ export default function EntryList() {
     setUpdatingEntryId(null);
   };
 
+  const castStatus = (v: string) => v as 'Pending' | 'Approved' | 'Rejected';
+
   const getRoleBadge = (role: string) => {
     const badges: Record<string, string> = {
       admin:
@@ -153,6 +159,44 @@ export default function EntryList() {
   const displayedEntries = filteredEntries.filter((item) =>
     JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    const top = topScrollRef.current;
+    const table = tableScrollRef.current;
+    if (!top || !table) return;
+
+    if (topInnerRef.current) {
+      try {
+        topInnerRef.current.style.width = `${table.scrollWidth}px`;
+      } catch (e) {
+        // noop
+      }
+    }
+
+    const onTopScroll = () => {
+      if (table) table.scrollLeft = top.scrollLeft;
+    };
+    const onTableScroll = () => {
+      if (top) top.scrollLeft = table.scrollLeft;
+    };
+
+    top.addEventListener('scroll', onTopScroll);
+    table.addEventListener('scroll', onTableScroll);
+
+    const onResize = () => {
+      if (topInnerRef.current) {
+        topInnerRef.current.style.width = `${table.scrollWidth}px`;
+      }
+    };
+
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      top.removeEventListener('scroll', onTopScroll);
+      table.removeEventListener('scroll', onTableScroll);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [loading, entries]);
 
   const totalMaterialCost = filteredEntries.reduce(
     (sum, entry) => sum + entry.material_cost,
@@ -333,213 +377,167 @@ export default function EntryList() {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
-            />
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Job
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Roll
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    User
-                  </th>
+  <div className="px-6 py-4">
+    <input
+      type="text"
+      placeholder="Search..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-full md:w-1/3 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+    />
+  </div>
 
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Meter Used
-                  </th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Waste
-                  </th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Material Cost
-                  </th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Waste Cost
-                  </th>
-                  <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Created At
-                  </th>
-                  {profile?.role === 'admin' && (
-                    <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {displayedEntries.map((entry) => (
-                  <tr
-                    key={entry.id}
-                    className={`transition-colors ${
-                      entry.jobs?.is_locked
-                        ? 'bg-red-50 hover:bg-red-100'
-                        : 'hover:bg-slate-50'
-                    }`}
+  <div className="px-6">
+
+    {/* Top Scrollbar */}
+    <div
+      ref={topScrollRef}
+      className="overflow-x-auto overflow-y-hidden sticky top-0 z-20 bg-white"
+      style={{ height: 12 }}
+    >
+      <div ref={topInnerRef} className="h-[1px]" />
+    </div>
+
+    {/* Table Scroll */}
+    <div ref={tableScrollRef} className="overflow-x-auto">
+      <table className="min-w-[1200px] w-full">
+
+        <thead className="bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider sticky left-0 bg-white z-20 shadow-sm">
+              Job
+            </th>
+
+            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              Roll
+            </th>
+
+            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              User
+            </th>
+
+            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              Meter Used
+            </th>
+
+            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              Waste
+            </th>
+
+            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              Material Cost
+            </th>
+
+            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              Waste Cost
+            </th>
+
+            <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              Status
+            </th>
+
+            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              Created At
+            </th>
+
+            {profile?.role === 'admin' && (
+              <th className="text-center px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                Actions
+              </th>
+            )}
+          </tr>
+        </thead>
+
+        <tbody className="divide-y divide-slate-200">
+          {displayedEntries.map((entry) => (
+            <tr
+              key={entry.id}
+              className={
+                entry.jobs?.is_locked
+                  ? 'transition-colors bg-red-50 hover:bg-red-100'
+                  : 'transition-colors hover:bg-slate-50'
+              }
+            >
+              {/* JOB */}
+              <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10 shadow-sm">
+                <div>
+                  <p className="font-semibold text-slate-800">
+                    {entry.jobs?.job_number || 'N/A'}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {entry.jobs?.client_name || ''}
+                  </p>
+                </div>
+              </td>
+
+              {/* ROLL */}
+              <td className="px-6 py-4 whitespace-nowrap">
+                {entry.rolls?.roll_number || 'N/A'}
+              </td>
+
+              {/* USER */}
+              <td className="px-6 py-4 whitespace-nowrap">
+                {entry.profiles?.full_name || 'Unknown'}
+              </td>
+
+              {/* METER */}
+              <td className="px-6 py-4 text-right whitespace-nowrap">
+                {entry.meter_used.toFixed(2)} m
+              </td>
+
+              {/* WASTE */}
+              <td className="px-6 py-4 text-right whitespace-nowrap text-red-600">
+                {entry.waste_meter.toFixed(2)} m
+              </td>
+
+              {/* MATERIAL COST */}
+              <td className="px-6 py-4 text-right whitespace-nowrap text-blue-600">
+                {entry.material_cost.toFixed(2)}
+              </td>
+
+              {/* WASTE COST */}
+              <td className="px-6 py-4 text-right whitespace-nowrap text-red-600">
+                {entry.waste_cost.toFixed(2)}
+              </td>
+
+              {/* STATUS */}
+              <td className="px-6 py-4 text-center whitespace-nowrap">
+                {entry.status}
+              </td>
+
+              {/* DATE */}
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                {formatDate(entry.created_at)}
+              </td>
+
+              {/* ACTION */}
+              {profile?.role === 'admin' && (
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <button
+                    onClick={() => handleDeleteEntry(entry.id)}
+                    className="p-2 hover:bg-red-50 rounded-lg"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <p className="font-semibold text-slate-800">
-                            {entry.jobs?.job_number || 'N/A'}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {entry.jobs?.client_name || ''}
-                          </p>
-                        </div>
-                        {entry.jobs?.is_locked && (
-                          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-200 text-red-800">
-                            Locked
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {entry.custom_roll_size ? (
-                        <>
-                          <p className="text-slate-800">Custom Size</p>
-                          <p className="text-xs text-slate-500">
-                            {entry.custom_roll_size}
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-slate-800">
-                            {entry.rolls?.roll_number || 'N/A'}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {entry.rolls?.size || 'N/A'} -{' '}
-                            {entry.rolls?.type || 'N/A'}
-                          </p>
-                        </>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-slate-700">
-                        {entry.profiles?.full_name || 'Unknown'}
-                      </p>
-                    </td>
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </button>
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
 
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <p className="font-medium text-slate-800">
-                        {entry.meter_used.toFixed(2)} m
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <p className="font-medium text-red-600">
-                        {entry.waste_meter.toFixed(2)} m
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <p className="font-medium text-blue-600">
-                        {entry.material_cost.toFixed(2)}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <p className="font-medium text-red-600">
-                        {entry.waste_cost.toFixed(2)}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-center whitespace-nowrap">
-                      {profile?.role === 'admin' && !entry.jobs?.is_locked ? (
-                        <select
-                          value={entry.status}
-                          onChange={(e) =>
-                            handleStatusChange(
-                              entry.id,
-                              e.target.value as
-                                | 'Pending'
-                                | 'Approved'
-                                | 'Rejected'
-                            )
-                          }
-                          disabled={updatingEntryId === entry.id}
-                          className="px-3 py-1 rounded-full text-xs font-semibold border focus:ring-2 focus:ring-green-500 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                          style={{
-                            backgroundColor:
-                              entry.status === 'Pending'
-                                ? '#fef3c7'
-                                : entry.status === 'Approved'
-                                ? '#d1fae5'
-                                : '#fee2e2',
-                            color:
-                              entry.status === 'Pending'
-                                ? '#92400e'
-                                : entry.status === 'Approved'
-                                ? '#065f46'
-                                : '#991b1b',
-                            borderColor:
-                              entry.status === 'Pending'
-                                ? '#fcd34d'
-                                : entry.status === 'Approved'
-                                ? '#6ee7b7'
-                                : '#fca5a5',
-                          }}
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Approved">Approved</option>
-                          <option value="Rejected">Rejected</option>
-                        </select>
-                      ) : (
-                        getStatusBadge(entry.status)
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-sm text-slate-600">
-                        {formatDate(entry.created_at)}
-                      </p>
-                    </td>
-                    {profile?.role === 'admin' && (
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center justify-center flex-wrap">
-                          {entry.jobs?.is_locked ? (
-                            <button
-                              disabled
-                              className="p-2 rounded-lg opacity-50 cursor-not-allowed"
-                              title="Cannot delete - job is locked"
-                            >
-                              <Trash2 className="w-4 h-4 text-slate-400" />
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleDeleteEntry(entry.id)}
-                              disabled={deletingEntryId === entry.id}
-                              className="p-2 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                              title="Delete entry"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      </table>
+    </div>
+
+  </div>
+</div>
       )}
 
       {toast.show && (
         <div
-          className={`fixed bottom-6 right-6 rounded-lg shadow-lg p-4 text-white animate-fade-in ${
-            toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-          }`}
+          className={
+            'fixed bottom-6 right-6 rounded-lg shadow-lg p-4 text-white animate-fade-in ' +
+            (toast.type === 'success' ? 'bg-green-600' : 'bg-red-600')
+          }
         >
           {toast.message}
         </div>
